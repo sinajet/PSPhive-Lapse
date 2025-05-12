@@ -31,7 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - 257 bytes to 233 bytes.
 - Renamed/Formatted `CHANGELOG.md`, `README.md`, and `LICENSE`
 
-##  [1.5.0](#) - 2025-05-08
+##  [1.5.0] - 2025-05-08
 
 ### Added
 
@@ -87,4 +87,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Proof-of-concept code to gain arbitrary read/write (PS4 6.50-9.60/PS5 1.00-5.50)
 
 [unreleased]: https://github.com/Al-Azif/psfree-lapse/compare/v1.5.1...HEAD
-[1.5.1]: https://github.com/Al-Azif/psfree-lapse/releases/tag/v1.5.1
+[1.5.1]: https://github.com/Al-Azif/psfree-lapse/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/Al-Azif/psfree-lapse/releases/tag/v1.5.0
