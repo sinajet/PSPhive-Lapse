@@ -15,12 +15,12 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-import { Int, lohi_from_one } from '/module/int64.mjs';
-import { Addr } from '/module/mem.mjs';
-import { BufferView } from '/module/rw.mjs';
+import { Int, lohi_from_one } from './int64.mjs';
+import { Addr } from './mem.mjs';
+import { BufferView } from './rw.mjs';
 
-import * as config from '/config.mjs';
-import * as mt from '/module/memtools.mjs';
+import * as config from '../config.mjs';
+import * as mt from './memtools.mjs';
 
 // View constructors will always get the buffer property in order to make sure
 // that the JSArrayBufferView is a WastefulTypedArray. m_vector may change if
@@ -76,8 +76,8 @@ function ViewMixin(superclass) {
     // isn't one of the built-in TypedArrays. this is a violation of the
     // ECMAScript spec at that time
     //
-    // TODO assumes ps4, support ps5 as well
-    // FIXME define the from/of workaround functions once
+    // TODO: Assumes PS4, support PS5 as well
+    // FIXME: Define the from/of workaround functions once
     if (0x600 <= config.target && config.target < 0x1000) {
         res.from = function from(...args) {
             const base = this.__proto__;
