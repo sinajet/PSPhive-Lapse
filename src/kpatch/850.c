@@ -60,8 +60,20 @@ void do_patch(void) {
 
     disable_cr0_wp();
 
-    // patch amd64_syscall() to allow calling syscalls everywhere
+    // ChendoChap's patches from pOOBs4 ///////////////////////////////////////
 
+    // Initial patches
+    write16(kbase, 0x624674, 0x9090); // veriPatch
+    write8(kbase, 0xacd, 0xeb); // bcopy
+    write8(kbase, 0x3a403d, 0xeb); // bzero
+    write8(kbase, 0x3a4081, 0xeb); // pagezero
+    write8(kbase, 0x3a40fd, 0xeb); // memcpy
+    write8(kbase, 0x3a4141, 0xeb); // pagecopy
+    write8(kbase, 0x3a42ed, 0xeb); // copyin
+    write8(kbase, 0x3a479d, 0xeb); // copyinstr
+    write8(kbase, 0x3a486d, 0xeb); // copystr
+
+    // patch amd64_syscall() to allow calling syscalls everywhere
     // struct syscall_args sa; // initialized already
     // u64 code = get_u64_at_user_address(td->tf_frame-tf_rip);
     // int is_invalid_syscall = 0
@@ -95,19 +107,16 @@ void do_patch(void) {
     //     call    qword [rax + 8] ; error = (sa->callp->sy_call)(td, sa->args)
     //
     // sy_call() is the function that will execute the requested syscall.
-    write16(kbase, 0x4b5, 0x9090);
-    write16(kbase, 0x4b9, 0x9090);
     write8(kbase, 0x4c2, 0xeb);
+    write16(kbase, 0x4b9, 0x9090);
+    write16(kbase, 0x4b5, 0x9090);
 
-    // patch sys_mmap() to allow rwx mappings
-
-    // patch maximum cpu mem protection: 0x33 -> 0x37
-    // the ps4 added custom protections for their gpu memory accesses
-    // GPU X: 0x8 R: 0x10 W: 0x20
-    // that's why you see other bits set
-    // ref: https://cturt.github.io/ps4-2.html
-    write8(kbase, 0x826ea, 0x37);
-    write8(kbase, 0x826ed, 0x37);
+    // patch sys_setuid() to allow freely changing the effective user ID
+    // ; PRIV_CRED_SETUID = 50
+    // call priv_check_cred(oldcred, PRIV_CRED_SETUID, 0)
+    // test eax, eax
+    // je ... ; patch je to jmp
+    write8(kbase, 0x22f3d6, 0xeb);
 
     // patch vm_map_protect() (called by sys_mprotect()) to allow rwx mappings
     //
@@ -119,8 +128,10 @@ void do_patch(void) {
     // }
     write32(kbase, 0x14d6dd, 0);
 
-    // patch sys_dynlib_dlsym() to allow dynamic symbol resolution everywhere
+    // TODO: Description of this patch. "prx"
+    write16(kbase, 0x17474, 0xe990);
 
+    // patch sys_dynlib_dlsym() to allow dynamic symbol resolution everywhere
     // call    ...
     // mov     r14, qword [rbp - 0xad0]
     // cmp     eax, 0x4000000
@@ -142,13 +153,14 @@ void do_patch(void) {
     //     ...
     write32(kbase, 0x3ad040, 0xc3c03148);
 
-    // patch sys_setuid() to allow freely changing the effective user ID
-
-    // ; PRIV_CRED_SETUID = 50
-    // call priv_check_cred(oldcred, PRIV_CRED_SETUID, 0)
-    // test eax, eax
-    // je ... ; patch je to jmp
-    write8(kbase, 0x22f3d6, 0xeb);
+    // patch sys_mmap() to allow rwx mappings
+    // patch maximum cpu mem protection: 0x33 -> 0x37
+    // the ps4 added custom protections for their gpu memory accesses
+    // GPU X: 0x8 R: 0x10 W: 0x20
+    // that's why you see other bits set
+    // ref: https://cturt.github.io/ps4-2.html
+    write8(kbase, 0x826ea, 0x37);
+    write8(kbase, 0x826ed, 0x37);
 
     // overwrite the entry of syscall 11 (unimplemented) in sysent
     //
@@ -164,15 +176,12 @@ void do_patch(void) {
     // int sys_kexec(struct thread td, struct args *uap) {
     //     asm("jmp qword ptr [rsi]");
     // }
-
-    // sysent[11]
-    const size_t offset_sysent_11 = 0x10fc7d0;
-    // .sy_narg = 6
-    write32(kbase, offset_sysent_11, 6);
+    // .sy_narg = 2
+    write32(kbase, 0x10fc7d0, 2);
     // .sy_call = gadgets['jmp qword ptr [rsi]']
-    write64(kbase, offset_sysent_11 + 8, kbase + 0xc810d);
+    write64(kbase, 0x10fc7d0 + 8, kbase + 0xc810d);
     // .sy_thrcnt = SY_THR_STATIC
-    write32(kbase, offset_sysent_11 + 0x2c, 1);
+    write32(kbase, 0x10fc7d0 + 0x2c, 1);
 
     enable_cr0_wp();
 }

@@ -7,7 +7,7 @@ PSFree is a collection of exploits for the PS4 console. The main focus of the re
 *   **Auto-detection:** Automatically detects console type and firmware version (via `src/config.mjs`).
 *   **WebKit Exploit (PSFree):** Entry point via the console's web browser.
 *   **Kernel Exploit (Lapse):** Escalates privileges to kernel level.
-*   ~~Payload Loader: After successful kernel exploitation listens for a payload on port 9020.~~ **WIP**
+*   **Payload Loader:** After successful kernel exploitation listens for a payload on port 9020.
 
 ## Vulnerability Scope
 
@@ -29,7 +29,6 @@ This table indicates firmware versions for which the *current version* of this r
 
 ## TODO List
 
-- [ ] Integrate payload loader (Test on 8.00-8.03)
 - [ ] Rewrite JOP chains in `rop/ps4/850.mjs`, `rop/ps4/900.mjs`, and `rop/ps4/950.mjs`
   - I scrapped the ones I had...
 - [ ] `lapse.mjs`: Just set the bits for JIT privs
