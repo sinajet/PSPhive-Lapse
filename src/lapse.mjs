@@ -949,6 +949,10 @@ function make_aliased_pktopts(sds) {
   const tclass = new Word();
   for (let loop = 0; loop < num_alias; loop++) {
     for (let i = 0; i < num_sds; i++) {
+      setsockopt(sds[i], IPPROTO_IPV6, IPV6_2292PKTOPTIONS, 0, 0);
+    }
+
+    for (let i = 0; i < num_sds; i++) {
       tclass[0] = i;
       ssockopt(sds[i], IPPROTO_IPV6, IPV6_TCLASS, tclass);
     }
@@ -972,10 +976,6 @@ function make_aliased_pktopts(sds) {
 
         return pair;
       }
-    }
-
-    for (let i = 0; i < num_sds; i++) {
-      setsockopt(sds[i], IPPROTO_IPV6, IPV6_2292PKTOPTIONS, 0, 0);
     }
   }
   die("failed to make aliased pktopts");
