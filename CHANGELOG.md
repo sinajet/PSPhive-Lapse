@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Kernel patches from pOOBs4 by @ChendoChap (Ported for 8.00-9.60)
+- Payload loader from pOOBs4 by @ChendoChap
+- `PROT_READ`, `PROT_WRITE`, `PROT_EXEC` constants for payload loader by @janisslsm
+- Added loading payload from file
+
+### Fixed
+
+- Fixed corrupt pointer cleanup by abc
+- Fixed `ip6po_rthdr` offset for PS5 by abc
+- Verified the number of blocking requests needed to be two by abc
+- Only run kernel exploit once by checking setuid by @JTAG7371
+- Restore syscall 661 (`sys_aio_submit()`) after patching by @janisslsm
+
+### Changed
+
+- Cleanup/Linting/Tweaks/Fixes/etc
+  - Default Prettier config w/ 999 line length
+  - Default eslint config "problems" list trimmed down
+- Reorder make_aliased_pktopts to try an reclaim memory earlier. By abc
+
 ##  [1.5.1] - 2025-05-12
 
 ### Added
