@@ -32,6 +32,10 @@ export class BufferView extends Uint8Array {
     this._dview = new DataView(this.buffer, this.byteOffset);
   }
 
+  read8(offset) {
+    return this._dview.getUint8(offset);
+  }
+
   read16(offset) {
     return this._dview.getUint16(offset, true);
   }
@@ -42,6 +46,10 @@ export class BufferView extends Uint8Array {
 
   read64(offset) {
     return new Int(this._dview.getUint32(offset, true), this._dview.getUint32(offset + 4, true));
+  }
+
+  write8(offset, value) {
+    this._dview.setUint8(offset, value);
   }
 
   write16(offset, value) {

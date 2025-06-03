@@ -17,8 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 // 8.00, 8.01, 8.03
 
-#include <stddef.h>
-
 #include "types.h"
 #include "utils.h"
 
@@ -31,8 +29,8 @@ struct kexec_args {
     u64 arg5;
 };
 
-void do_patch(void);
-void restore(struct kexec_args *uap);
+static inline void restore(struct kexec_args *uap);
+static inline void do_patch(void);
 
 __attribute__((section (".text.start")))
 int kpatch(void *td, struct kexec_args *uap) {
@@ -41,10 +39,11 @@ int kpatch(void *td, struct kexec_args *uap) {
     return 0;
 }
 
-void restore(struct kexec_args *uap) {
+__attribute__((always_inline))
+static inline void restore(struct kexec_args *uap) {
     u8 *pipe = uap->arg1;
     u8 *pipebuf = uap->arg2;
-    for (size_t i = 0; i < 0x18; i++) {
+    for (int i = 0; i < 0x18; i++) {
         pipe[i] = pipebuf[i];
     }
     u64 *pktinfo_field = uap->arg3;
@@ -53,16 +52,15 @@ void restore(struct kexec_args *uap) {
     *pktinfo_field2 = 0;
 }
 
-void do_patch(void) {
-    // offset to fast_syscall()
-    const size_t off_fast_syscall = 0x1c0;
-    void * const kbase = (void *)rdmsr(0xc0000082) - off_fast_syscall;
+__attribute__((always_inline))
+static inline void do_patch(void) {
+    // get kernel base
+    const u64 xfast_syscall_off = 0x1c0;
+    void * const kbase = (void *)rdmsr(0xc0000082) - xfast_syscall_off;
 
     disable_cr0_wp();
 
-    // ChendoChap's patches from pOOBs4 ///////////////////////////////////////
-
-    // Initial patches
+    // ChendoChap's patches from pOOBs4
     write16(kbase, 0x62d254, 0x9090); // veriPatch
     write8(kbase, 0xacd, 0xeb); // bcopy
     write8(kbase, 0x25e10d, 0xeb); // bzero
@@ -176,12 +174,13 @@ void do_patch(void) {
     // int sys_kexec(struct thread td, struct args *uap) {
     //     asm("jmp qword ptr [rsi]");
     // }
+    const u64 sysent_11_off = 0x10fc6e0;
     // .sy_narg = 2
-    write32(kbase, 0x10fc6e0, 2);
+    write32(kbase, sysent_11_off, 2);
     // .sy_call = gadgets['jmp qword ptr [rsi]']
-    write64(kbase, 0x10fc6e0 + 8, kbase + 0xe629c);
+    write64(kbase, sysent_11_off + 8, kbase + 0xe629c);
     // .sy_thrcnt = SY_THR_STATIC
-    write32(kbase, 0x10fc6e0 + 0x2c, 1);
+    write32(kbase, sysent_11_off + 0x2c, 1);
 
     enable_cr0_wp();
 }

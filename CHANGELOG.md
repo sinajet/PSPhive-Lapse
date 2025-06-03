@@ -8,10 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Kernel patches from pOOBs4 by @ChendoChap (Ported for 8.00-9.60)
+- Kernel patches from pOOBs4 by @ChendoChap and ported for 8.00-9.60
+  - 233 bytes to 307 bytes
 - Payload loader from pOOBs4 by @ChendoChap
-- `PROT_READ`, `PROT_WRITE`, `PROT_EXEC` constants for payload loader by @janisslsm
+- `PROT_READ`, `PROT_WRITE`, `PROT_EXEC` constants for payload loader by
+  @janisslsm
 - Added loading payload from file
+- Added read8/read16/write8/write16 functions
 
 ### Fixed
 
@@ -26,7 +29,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Cleanup/Linting/Tweaks/Fixes/etc
   - Default Prettier config w/ 999 line length
   - Default eslint config "problems" list trimmed down
-- Reorder make_aliased_pktopts to try an reclaim memory earlier. By abc
+- Reorder make_aliased_pktopts to try and reclaim memory earlier, by abc
+- Simplify shellcode a little bit more
+  - No external headers
+  - Added `-fcf-protection=none` flag to skip added "endbr64" instructions
+    - 307 bytes to 295 bytes
+  - Changed `restore` and `do_patch` to be inlined
+    - 307 bytes to 282 bytes
+  - Changed to `-03` for execution speed optimization
+    - 282 bytes to 345 bytes
 
 ##  [1.5.1] - 2025-05-12
 

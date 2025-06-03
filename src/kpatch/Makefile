@@ -2,7 +2,7 @@ TARGET_VERSIONS = 800 850 900 903 950
 
 CC = gcc
 OBJCOPY = objcopy
-CFLAGS = -Os -std=gnu11 -Wno-int-conversion -masm=intel -nostartfiles -Tscript.ld
+CFLAGS = -O3 -std=gnu11 -Wno-int-conversion -masm=intel -nostartfiles -fcf-protection=none -Tscript.ld
 
 .PHONY: all
 ALL_SOURCES = $(TARGET_VERSIONS:%=%.c)

