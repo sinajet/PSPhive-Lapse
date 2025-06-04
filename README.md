@@ -29,7 +29,7 @@ This table indicates firmware versions for which the *current version* of this r
 
 ## TODO List
 
-- [ ] Rewrite JOP chains in `rop/ps4/850.mjs`, `rop/ps4/900.mjs`, and `rop/ps4/950.mjs`
+- [ ] Rewrite JOP chains in `rop/ps4/900.mjs` and `rop/ps4/950.mjs`
   - I scrapped the ones I had...
 - [ ] `lapse.mjs`: Just set the bits for JIT privs
 - [ ] `view.mjs`: Assumes PS4, support PS5 as well
