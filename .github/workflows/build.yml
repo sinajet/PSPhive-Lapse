@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -24,7 +27,7 @@ jobs:
       - name: Upload entire repository as zip
         uses: actions/upload-artifact@v4
         with:
-          name: psfree-lapse-archive
+          name: psfree-lapse
           path: ${{ github.workspace }}
           if-no-files-found: error
           compression-level: 9
