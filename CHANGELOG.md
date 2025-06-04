@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   @janisslsm
 - Added loading payload from file
 - Added read8/read16/write8/write16 functions
+- Added 8.50 and 8.52 support
 
 ### Fixed
 

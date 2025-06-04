@@ -60,6 +60,8 @@ const [is_ps4, version] = (() => {
     throw RangeError(`invalid config.target: ${hex(value)}`);
   }
 
+  log(`Console: PS${is_ps4 ? "4" : "5"} | Firmware: ${hex(version)}`);
+
   return [is_ps4, version];
 })();
 

@@ -22,7 +22,7 @@ This table indicates firmware versions for which the *current version* of this r
 
 |               | PSFree    | Lapse      |
 |:--------------|:----------|:-----------|
-| PlayStation 4 | 8.00-8.03 | 8.00-8.03  |
+| PlayStation 4 | 8.00-8.52 | 8.00-8.52  |
 | PlayStation 5 | N/A       | N/A        |
 
 *Note: Support for other firmwares listed in the "Vulnerability Scope" table may, or may not, be actively being worked on or may have been supported in previous versions of this repository. Please check `CHANGELOG.md` for historical support.*

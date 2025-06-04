@@ -64,6 +64,8 @@ const [is_ps4, version] = (() => {
     throw RangeError(`invalid config.target: ${hex(value)}`);
   }
 
+  log(`Console: PS${is_ps4 ? "4" : "5"} | Firmware: ${hex(version)}`);
+
   return [is_ps4, version];
 })();
 
@@ -1491,8 +1493,8 @@ async function get_binary(url) {
 }
 
 // Using JIT to load our own shellcode code here avoids the need to preform
-// some trick toggle the CR0 Protection Mode bit. We can just toggle it easily
-// within our shellcode.
+// some trick toggle the CR0.WP bit. We can just toggle it easily within our
+// shellcode.
 async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   if (!is_ps4) {
     throw RangeError("ps5 kernel patching unsupported");
