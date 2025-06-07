@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Kernel patches from pOOBs4 by @ChendoChap and ported for 8.00-9.60
+- Kernel patches from pOOBs4 by @ChendoChap and ported for 7.00-9.60
   - 233 bytes to 307 bytes
 - Payload loader from pOOBs4 by @ChendoChap
 - `PROT_READ`, `PROT_WRITE`, `PROT_EXEC` constants for payload loader by
