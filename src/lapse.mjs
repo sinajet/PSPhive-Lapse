@@ -38,6 +38,9 @@ import * as rop from "./module/chain.mjs";
 import * as config from "./config.mjs";
 
 // static imports for firmware configurations
+import * as fw_ps4_700 from "./lapse/ps4/700.mjs";
+import * as fw_ps4_750 from "./lapse/ps4/750.mjs";
+import * as fw_ps4_751 from "./lapse/ps4/751.mjs";
 import * as fw_ps4_800 from "./lapse/ps4/800.mjs";
 import * as fw_ps4_850 from "./lapse/ps4/850.mjs";
 import * as fw_ps4_852 from "./lapse/ps4/852.mjs";
@@ -72,7 +75,16 @@ const [is_ps4, version] = (() => {
 // set per-console/per-firmware offsets
 const fw_config = (() => {
   if (is_ps4) {
-    if (0x800 <= version && version < 0x850) {
+    if (0x700 <= version && version < 0x750) {
+      // 7.00, 7.01, 7.02
+      return fw_ps4_700;
+    } else if (0x750 <= version && version < 0x751) {
+      // 7.50
+      return fw_ps4_750;
+    } else if (0x751 <= version && version < 0x800) {
+      // 7.51, 7.55
+      return fw_ps4_751;
+    } else if (0x800 <= version && version < 0x850) {
       // 8.00, 8.01, 8.03
       return fw_ps4_800;
     } else if (0x850 <= version && version < 0x852) {
@@ -1499,8 +1511,8 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   if (!is_ps4) {
     throw RangeError("ps5 kernel patching unsupported");
   }
-  if (!(0x800 <= version && version < 0x1000)) {
-    // 8.00, 8.01, 8.03, 8.50, 8.52, 9.00, 9.03, 9.04, 9.50, 9.51, 9.60
+  if (!(0x700 <= version && version < 0x1000)) {
+    // Only 7.00-9.60 supported
     throw RangeError("kernel patching unsupported");
   }
 

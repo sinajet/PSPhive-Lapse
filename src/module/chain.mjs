@@ -543,25 +543,25 @@ function load_fw_specific(version) {
   // ECMAScript 2015. 6.xx WebKit poisons the pointer fields of some types
   // which can be annoying to deal with
   if (value < 0x700) {
-    throw RangeError("PS4 firmwares < 7.00 isn't supported");
+    throw RangeError("PS4 firmwares <7.00 aren't supported");
   }
 
-  if (0x800 <= value && value < 0x850) {
+  if (0x700 <= value && value < 0x750) {
+    // 7.00, 7.01, 7.02
+    return import("../rop/ps4/700.mjs");
+  } else if (0x750 <= value && value < 0x800) {
+    // 7.50, 7.51, 7.55
+    return import("../rop/ps4/750.mjs");
+  } else if (0x800 <= value && value < 0x850) {
     // 8.00, 8.01, 8.03
     return import("../rop/ps4/800.mjs");
-  }
-
-  if (0x850 <= value && value < 0x900) {
+  } else if (0x850 <= value && value < 0x900) {
     // 8.50, 8.52
     return import("../rop/ps4/850.mjs");
-  }
-
-  if (0x900 <= value && value < 0x950) {
+  } else if (0x900 <= value && value < 0x950) {
     // 9.00, 9.03, 9.04
     return import("../rop/ps4/900.mjs");
-  }
-
-  if (0x950 <= value && value < 0x1000) {
+  } else if (0x950 <= value && value < 0x1000) {
     // 9.50, 9.51, 9.60
     return import("../rop/ps4/950.mjs");
   }
