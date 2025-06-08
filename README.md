@@ -42,7 +42,3 @@ AGPL-3.0-or-later (see [LICENSE](LICENSE)). This repo belongs to the group `anon
 
 - anonymous for PS4 firmware kernel dumps
 - Check the appropriate files for any **extra** contributors. Unless otherwise stated, everything here can also be credited to us.
-
-## Donations
-
-(Monero/XMR): **86Fk3X9AE94EGKidzRbvyiVgGNYD3qZnuKNq1ZbsomFWXHYm6TtAgz9GNGitPWadkS3Wr9uXoT29U1SfdMtJ7QNKQpW1CVS**
