@@ -25,7 +25,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Fixed `ip6po_rthdr` offset for PS5 by abc
 - Verified the number of blocking requests needed to be two by abc
 - Only run kernel exploit once by checking setuid by @JTAG7371
-- Restore syscall 661 (`sys_aio_submit()`) after patching by @janisslsm
+- ~~Restore syscall 661 (`sys_aio_submit()`) after patching by @janisslsm~~
+  - Was not actually restoring syscall. Used a different method/rewrote to
+  restore in kpatch.
+    - Shellcode from 345 bytes to 444 bytes
 
 ### Changed
 

