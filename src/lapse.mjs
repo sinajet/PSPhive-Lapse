@@ -1600,6 +1600,23 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   log("execute kpatch...")
   mem.cpy(write_addr, patches.addr, patches.size);
   sys_void("kexec", exec_addr, ...restore_info);
+
+  // Explicitly close everything, it should happen implicitly already... did
+  // not fix blackscreen issue.
+
+  // log("munlock locked data");
+  // sysi("munlock", restore_info[4], page_size);
+  // sysi("munlock", restore_info[1], page_size);
+  // sysi("munlock", exec_addr, map_size);
+
+  // log("munmap kpatch shellcode memory");
+  // sysi("munmap", write_addr, map_size);
+  // sysi("munmap", exec_addr, map_size);
+
+  // One works, both cause an OOM error, then works as it reloads because it kpatched properly
+  // log("close JIT fds");
+  // close(write_fd);
+  // close(exec_fd);
 }
 
 // FUNCTIONS FOR STAGE: SETUP
