@@ -27,7 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Only run kernel exploit once by checking setuid by @JTAG7371
 - ~~Restore syscall 661 (`sys_aio_submit()`) after patching by @janisslsm~~
   - Was not actually restoring syscall. Used a different method/rewrote to
-  restore in kpatch.
+  restore in kpatch. (Shellcode change 4)
     - Shellcode from 345 bytes to 444 bytes
 
 ### Changed
@@ -39,11 +39,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Simplify shellcode a little bit more
   - No external headers
   - Added `-fcf-protection=none` flag to skip added "endbr64" instructions
+  (Shellcode change 1)
     - 307 bytes to 295 bytes
-  - Changed `restore` and `do_patch` to be inlined
+  - Changed `restore` and `do_patch` to be inlined (Shellcode change 2)
     - 307 bytes to 282 bytes
-  - Changed to `-03` for execution speed optimization
+  - Changed to `-03` for execution speed optimization (Shellcode change 3)
     - 282 bytes to 345 bytes
+  - Move kbase calc to main function (Shellcode change 5)
+    - 444 bytes to 418 bytes
 
 ## [1.5.1] - 2025-05-12
 
