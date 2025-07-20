@@ -132,7 +132,7 @@ static inline void do_patch(void *kbase) {
     //     vm_map_unlock(map);
     //     return (KERN_PROTECTION_FAILURE);
     // }
-    write32(kbase, 0x3014ca, 0);
+    write16(kbase, 0x3014c8, 0x04eb);
 
     // TODO: Description of this patch. patch sys_dynlib_load_prx()
     write16(kbase, 0x451e04, 0xe990);
