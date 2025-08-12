@@ -84,22 +84,16 @@ function runJB() {
     CacheProgress2.style.display = "none";
     cacheUPDtxt.innerHTML = "Running PSFree Exploit, Please Wait...";
 
-    // فعال کردن ناظر کنسول
+    // مرحله ۱: ناظر کنسول را فعال می‌کنیم
     startConsoleObserver();
 
-    // اجرای ماژول با مدیریت خطاهای صحیح
-    const script = document.createElement('script');
-    script.type = 'module';
-    script.textContent = `
-        try {
-            import('${new URL('./PSFree/alert.mjs', window.location.href)}')
-                .then(() => console.log("Module loaded"))
-                .catch(e => console.error("Import error:", e));
-        } catch (e) {
-            console.error("Module error:", e);
+    // مرحله ۲: اکسپلویت را مثل قبل اجرا می‌کنیم
+    import('./PSFree/alert.mjs').catch(e => {
+        const consoleElement = document.getElementById('console');
+        if (consoleElement) {
+            consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${e.stack || e.message}\n`;
         }
-    `;
-    document.head.appendChild(script);
+    });
 }
 
 function go(){
