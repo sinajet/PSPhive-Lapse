@@ -90,29 +90,15 @@ function runJB() {
     // اجرای ماژول با مدیریت خطاهای صحیح
     const script = document.createElement('script');
     script.type = 'module';
-    
     script.textContent = `
         try {
-            import("./PSFree/alert.mjs")
-                .then(module => {
-                    console.log("Module loaded successfully");
-                })
-                .catch(error => {
-                    console.error("Module loading failed:", error);
-                    const consoleElement = document.getElementById('console');
-                    if (consoleElement) {
-                        consoleElement.innerHTML += \`<b>Exploit Failed!</b><br><br>\${error.stack || error.message}\\n\`;
-                    }
-                });
-        } catch (error) {
-            console.error("Unhandled error:", error);
-            const consoleElement = document.getElementById('console');
-            if (consoleElement) {
-                consoleElement.innerHTML += \`<b>Critical Error!</b><br><br>\${error.stack || error.message}\\n\`;
-            }
+            import('${new URL('./PSFree/alert.mjs', window.location.href)}')
+                .then(() => console.log("Module loaded"))
+                .catch(e => console.error("Import error:", e));
+        } catch (e) {
+            console.error("Module error:", e);
         }
     `;
-    
     document.head.appendChild(script);
 }
 
