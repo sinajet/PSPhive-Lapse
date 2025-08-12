@@ -173,14 +173,14 @@
 
         startConsoleObserver();
 
-        import("./psfree/alert.mjs").catch((e) => {
-          const consoleElement = document.getElementById("console");
-          if (consoleElement) {
-            consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${
-              e.stack || e.message
-            }\n`;
-          }
-        });
+        // import("./psfree/alert.mjs").catch((e) => {
+        //   const consoleElement = document.getElementById("console");
+        //   if (consoleElement) {
+        //     consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${
+        //       e.stack || e.message
+        //     }\n`;
+        //   }
+        // });
       }
 
       // Expose go globally for onload attribute
