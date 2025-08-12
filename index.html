@@ -76,9 +76,28 @@ function startConsoleObserver() {
         characterData: true
     });
 }
-// --- END: New and Corrected Console Observer Function ---
+
+async function loadMultipleModules(files) {
+  try {
+    // Dynamically import all modules
+    const modules = await Promise.all(files.map(file => import(file)));
+    return modules; // array of imported modules
+  } catch (error) {
+    console.error("Error loading modules:", error);
+    throw error;
+  }
+}
 
 
+async function runJB() {
+    ScrOverlay.style.display = "block";
+    CacheProgress.style.display = "none";
+    CacheProgress2.style.display = "none";
+    cacheUPDtxt.innerHTML = "Running PSFree Exploit, Please Wait...";
+
+    startConsoleObserver();
+    const modules = await loadMultipleModules(['../psfree/alert.mjs']);
+}
 
 function go(){
  if (window.applicationCache.status=='0'){
@@ -135,28 +154,6 @@ function JBalreadyDone(){
  setTimeout(function(){Loader.style.opacity="1";},500);
 }
 </script>
-<script type="module">
-  
-  // کد برای اجرای exploit
-</script>
-<script type="module">
-function runJB() {
-    ScrOverlay.style.display = "block";
-    CacheProgress.style.display = "none";
-    CacheProgress2.style.display = "none";
-    cacheUPDtxt.innerHTML = "Running PSFree Exploit, Please Wait...";
 
-    // مرحله ۱: ناظر کنسول را فعال می‌کنیم
-    startConsoleObserver();
-
-    // مرحله ۲: اکسپلویت را مثل قبل اجرا می‌کنیم
-    import('./PSFree/alert.mjs').catch(e => {
-        const consoleElement = document.getElementById('console');
-        if (consoleElement) {
-            consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${e.stack || e.message}\n`;
-        }
-    });
-}
-</script>
 </body>
 </html>
