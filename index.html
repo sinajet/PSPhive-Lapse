@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
   <head>
     <title>
@@ -117,23 +116,29 @@
     <script type="module">
       import * as alert from "./psfree/alert.mjs";
 
-      // Initialize localStorage defaults
-      if (localStorage.length === 0) {
-        if (localStorage.GHver == null) localStorage.GHver = "v2.4b18.5";
-        if (localStorage.autoGH == null) localStorage.autoGH = "OFF";
-        if (localStorage.passcount == null) localStorage.passcount = 0;
-        if (localStorage.failcount == null) localStorage.failcount = 0;
+      if (localStorage.length == 0) {
+        if (localStorage.GHver == null) {
+          localStorage.GHver = "v2.4b18.5";
+        }
+        if (localStorage.autoGH == null) {
+          localStorage.autoGH = "OFF";
+        }
+        if (localStorage.passcount == null) {
+          localStorage.passcount = 0;
+        }
+        if (localStorage.failcount == null) {
+          localStorage.failcount = 0;
+        }
       }
 
-      // Functions independent of DOM ready state
       function checkGHBLS() {
-        const req = new XMLHttpRequest();
+        var req = new XMLHttpRequest();
         req.open("GET", "http://127.0.0.1:9090/status");
         req.send();
         req.onload = function () {
           Loader.innerHTML =
             '<object id="mymenu" type="text/html" data="files/menu.html" style="width:100%; height:100%; background-color:transparent;"></object>';
-          setTimeout(() => {
+          setTimeout(function () {
             Loader.style.opacity = "1";
           }, 500);
         };
@@ -146,14 +151,16 @@
         const consoleElement = document.getElementById("console");
         if (!consoleElement) return;
 
-        const observer = new MutationObserver(() => {
+        const observer = new MutationObserver((mutationsList) => {
           const currentText = consoleElement.textContent || "";
 
           if (currentText.toLowerCase().includes("awaiting payload...")) {
             consoleElement.append(
               "Success message detected! Loading menu...\n"
             );
+
             setTimeout(JBpass, 500);
+
             observer.disconnect();
           }
         });
@@ -164,6 +171,7 @@
           characterData: true,
         });
       }
+      // --- END: New and Corrected Console Observer Function ---
 
       function runJB() {
         ScrOverlay.style.display = "block";
@@ -171,19 +179,21 @@
         CacheProgress2.style.display = "none";
         cacheUPDtxt.innerHTML = "Running PSFree Exploit, Please Wait...";
 
+        // مرحله ۱: ناظر کنسول را فعال می‌کنیم
         startConsoleObserver();
 
-        // import("./psfree/alert.mjs").catch((e) => {
-        //   const consoleElement = document.getElementById("console");
-        //   if (consoleElement) {
-        //     consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${
-        //       e.stack || e.message
-        //     }\n`;
-        //   }
-        // });
+        // مرحله ۲: اکسپلویت را مثل قبل اجرا می‌کنیم
+        import("./psfree/psfree.mjs").catch((e) => {
+          const consoleElement = document.getElementById("console");
+          if (consoleElement) {
+            consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${
+              e.stack || e.message
+            }\n`;
+          }
+        });
+
       }
 
-      // Expose go globally for onload attribute
       function go() {
         if (window.applicationCache.status == "0") {
           ScrOverlay.style.display = "block";
@@ -193,80 +203,67 @@
           checkGHBLS();
         }
       }
-      window.go = go;
-
-      // DOM-dependent initializations after DOM content loaded
-      window.addEventListener("DOMContentLoaded", () => {
-        const consoleElem = document.getElementById("console");
-        if (!consoleElem) return;
-
-        const logToScreen = (message) => {
-          consoleElem.append(message + "\n");
-          consoleElem.scrollTop = consoleElem.scrollHeight;
+    </script>
+  </head>
+  <body onload="go()">
+    <div id="ScrOverlay" class="cacheUPDbg">
+      <pre id="cacheUPDtxt" class="cacheUPDtext"></pre>
+      <div id="CacheProgress"><div id="CacheBar" class="CacheBar"></div></div>
+      <div id="CacheProgress2"><div id="CacheBar2" class="CacheBar"></div></div>
+      <div id="console-container"><pre id="console"></pre></div>
+    </div>
+    <div id="Loader" class="Loader"></div>
+    <script>
+      (function () {
+        const console = document.getElementById("console");
+        if (!console) return;
+        const logToScreen = function (message) {
+          console.append(message + "\n");
+          console.scrollTop = console.scrollHeight;
         };
-
-        // Override console.log to also print to on-screen console
         const originalLog = console.log;
         console.log = function () {
-          const message = Array.from(arguments).join(" ");
+          let message = Array.from(arguments).join(" ");
           logToScreen(message);
           originalLog.apply(console, arguments);
         };
-
-        // Override alert to print to on-screen console
         window.alert = function (message) {
           logToScreen(`[ALERT] ${message}`);
         };
-      });
+      })();
 
-      // Functions that manipulate DOM elements on the page
       function JBpass() {
         ScrOverlay.style.opacity = "0";
-        setTimeout(() => {
+        setTimeout(function () {
           ScrOverlay.style.display = "none";
         }, 600);
         Loader.innerHTML =
           '<object id="mymenu" type="text/html" data="files/menu.html" style="width:100%; height:100%; background-color:transparent;"></object>';
-        setTimeout(() => {
+        setTimeout(function () {
           localStorage.passcount = ++localStorage.passcount;
           mymenu.contentWindow.passCounter.innerHTML = localStorage.passcount;
           mymenu.contentWindow.failCounter.innerHTML = localStorage.failcount;
         }, 1100);
-        setTimeout(() => {
+        setTimeout(function () {
           Loader.style.opacity = "1";
         }, 500);
-        if (localStorage.autoGH === "ON")
-          setTimeout(() => {
+        if (localStorage.autoGH == "ON")
+          setTimeout(function () {
             mymenu.contentWindow.LoadPL();
           }, 1500);
       }
 
       function JBalreadyDone() {
         ScrOverlay.style.opacity = "0";
-        setTimeout(() => {
+        setTimeout(function () {
           ScrOverlay.style.display = "none";
         }, 600);
         Loader.innerHTML =
           '<object id="mymenu" type="text/html" data="files/menu.html" style="width:100%; height:100%; background-color:transparent;"></object>';
-        setTimeout(() => {
+        setTimeout(function () {
           Loader.style.opacity = "1";
         }, 500);
       }
     </script>
-  </head>
-  <body onload="go()">
-    <div id="ScrOverlay" class="cacheUPDbg">
-      <pre id="cacheUPDtxt" class="cacheUPDtext"></pre>
-      <div id="CacheProgress">
-        <div id="CacheBar" class="CacheBar"></div>
-      </div>
-      <div id="CacheProgress2">
-        <div id="CacheBar2" class="CacheBar"></div>
-      </div>
-      <div id="console-container">
-        <pre id="console"></pre>
-      </div>
-    </div>
-    <div id="Loader" class="Loader"></div>
   </body>
 </html>
