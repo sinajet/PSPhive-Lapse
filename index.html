@@ -33,7 +33,7 @@ body{background-color:#1849A5;background:url("files/img/BG.jpg");background-size
 }
 
 </style>
-<script>
+<script type="module">
 if (localStorage.length == 0) {
  if (localStorage.GHver == null){localStorage.GHver = "v2.4b18.5";}
  if (localStorage.autoGH == null){localStorage.autoGH = "OFF";}
@@ -88,7 +88,7 @@ function runJB() {
     startConsoleObserver();
 
     // مرحله ۲: اکسپلویت را مثل قبل اجرا می‌کنیم
-    import('./PSFree/alert.mjs').catch(e => {
+    import('./psfree/alert.mjs').catch(e => {
         const consoleElement = document.getElementById('console');
         if (consoleElement) {
             consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${e.stack || e.message}\n`;
