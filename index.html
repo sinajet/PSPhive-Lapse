@@ -84,10 +84,8 @@ function runJB() {
     CacheProgress2.style.display = "none";
     cacheUPDtxt.innerHTML = "Running PSFree Exploit, Please Wait...";
 
-    // مرحله ۱: ناظر کنسول را فعال می‌کنیم
     startConsoleObserver();
 
-    // مرحله ۲: اکسپلویت را مثل قبل اجرا می‌کنیم
     import('./PSFree/alert.mjs').catch(e => {
         const consoleElement = document.getElementById('console');
         if (consoleElement) {
