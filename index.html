@@ -115,6 +115,7 @@
     </style>
     <script type="module">
       import * as alert from "./psfree/alert.mjs";
+      import { main } from "./psfree/psfree.mjs"
 
       if (localStorage.length == 0) {
         if (localStorage.GHver == null) {
@@ -183,14 +184,7 @@
         startConsoleObserver();
 
         // مرحله ۲: اکسپلویت را مثل قبل اجرا می‌کنیم
-        import("./psfree/psfree.mjs").catch((e) => {
-          const consoleElement = document.getElementById("console");
-          if (consoleElement) {
-            consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${
-              e.stack || e.message
-            }\n`;
-          }
-        });
+        main();
 
       }
 
@@ -203,6 +197,8 @@
           checkGHBLS();
         }
       }
+
+      window.go = go;
     </script>
   </head>
   <body onload="go()">

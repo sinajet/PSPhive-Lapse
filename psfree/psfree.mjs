@@ -815,7 +815,7 @@ async function make_arw(reader, view2, pop) {
   make_arw._buffer = bt.buffer;
 }
 
-async function main() {
+export async function main() {
   log("STAGE: UAF SSV");
   const [fsets, indices] = prepare_uaf();
   const [view, [view2, pop]] = await uaf_ssv(fsets, indices[1], indices[0]);
@@ -834,4 +834,4 @@ async function main() {
   clear_log();
   import("./lapse.mjs");
 }
-main();
+// main();
