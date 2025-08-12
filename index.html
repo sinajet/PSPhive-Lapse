@@ -115,6 +115,8 @@
       }
     </style>
     <script type="module">
+      import * as alertModule from "./psfree/alert.mjs";
+
       // Initialize localStorage defaults
       if (localStorage.length === 0) {
         if (localStorage.GHver == null) localStorage.GHver = "v2.4b18.5";
@@ -123,7 +125,6 @@
         if (localStorage.failcount == null) localStorage.failcount = 0;
       }
 
-      // Functions independent of DOM ready state
       function checkGHBLS() {
         const req = new XMLHttpRequest();
         req.open("GET", "http://127.0.0.1:9090/status");
@@ -148,7 +149,9 @@
           const currentText = consoleElement.textContent || "";
 
           if (currentText.toLowerCase().includes("awaiting payload...")) {
-            consoleElement.append("Success message detected! Loading menu...\n");
+            consoleElement.append(
+              "Success message detected! Loading menu...\n"
+            );
             setTimeout(JBpass, 500);
             observer.disconnect();
           }
@@ -169,17 +172,19 @@
 
         startConsoleObserver();
 
-        import("./psfree/alert.mjs").catch((e) => {
+        try {
+          // Call function exported from alert.mjs; change to actual function name
+          alertModule.runAlert();
+        } catch (e) {
           const consoleElement = document.getElementById("console");
           if (consoleElement) {
             consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${
               e.stack || e.message
             }\n`;
           }
-        });
+        }
       }
 
-      // Expose go globally for onload attribute
       function go() {
         if (window.applicationCache.status == "0") {
           ScrOverlay.style.display = "block";
@@ -191,7 +196,6 @@
       }
       window.go = go;
 
-      // DOM-dependent initializations after DOM content loaded
       window.addEventListener("DOMContentLoaded", () => {
         const consoleElem = document.getElementById("console");
         if (!consoleElem) return;
@@ -201,7 +205,6 @@
           consoleElem.scrollTop = consoleElem.scrollHeight;
         };
 
-        // Override console.log to also print to on-screen console
         const originalLog = console.log;
         console.log = function () {
           const message = Array.from(arguments).join(" ");
@@ -209,13 +212,11 @@
           originalLog.apply(console, arguments);
         };
 
-        // Override alert to print to on-screen console
         window.alert = function (message) {
           logToScreen(`[ALERT] ${message}`);
         };
       });
 
-      // Functions that manipulate DOM elements on the page
       function JBpass() {
         ScrOverlay.style.opacity = "0";
         setTimeout(() => {
