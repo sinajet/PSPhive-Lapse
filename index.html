@@ -115,7 +115,7 @@
       }
     </style>
     <script type="module">
-      import * as alertModule from "./psfree/alert.mjs";
+      import * as alert from "./psfree/alert.mjs";
 
       // Initialize localStorage defaults
       if (localStorage.length === 0) {
@@ -125,6 +125,7 @@
         if (localStorage.failcount == null) localStorage.failcount = 0;
       }
 
+      // Functions independent of DOM ready state
       function checkGHBLS() {
         const req = new XMLHttpRequest();
         req.open("GET", "http://127.0.0.1:9090/status");
@@ -172,19 +173,17 @@
 
         startConsoleObserver();
 
-        try {
-          // Call function exported from alert.mjs; change to actual function name
-          alertModule.runAlert();
-        } catch (e) {
+        import("./psfree/alert.mjs").catch((e) => {
           const consoleElement = document.getElementById("console");
           if (consoleElement) {
             consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${
               e.stack || e.message
             }\n`;
           }
-        }
+        });
       }
 
+      // Expose go globally for onload attribute
       function go() {
         if (window.applicationCache.status == "0") {
           ScrOverlay.style.display = "block";
@@ -196,6 +195,7 @@
       }
       window.go = go;
 
+      // DOM-dependent initializations after DOM content loaded
       window.addEventListener("DOMContentLoaded", () => {
         const consoleElem = document.getElementById("console");
         if (!consoleElem) return;
@@ -205,6 +205,7 @@
           consoleElem.scrollTop = consoleElem.scrollHeight;
         };
 
+        // Override console.log to also print to on-screen console
         const originalLog = console.log;
         console.log = function () {
           const message = Array.from(arguments).join(" ");
@@ -212,11 +213,13 @@
           originalLog.apply(console, arguments);
         };
 
+        // Override alert to print to on-screen console
         window.alert = function (message) {
           logToScreen(`[ALERT] ${message}`);
         };
       });
 
+      // Functions that manipulate DOM elements on the page
       function JBpass() {
         ScrOverlay.style.opacity = "0";
         setTimeout(() => {
