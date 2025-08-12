@@ -1,156 +1,143 @@
 <html>
-<head>
-<title>PS-Phive! (FOR PS4 FW v7.00 to v9.60) v1.0 By Leeful, Ported by Sinajet</title>
-<style>
-html{margin:0px;}
-body{background-color:#1849A5;background:url("files/img/BG.jpg");background-size:cover;background-repeat:no-repeat;color:#DDE5EA;font-family:sans-serif;font-size:22px;overflow:hidden;cursor:none;margin:0px;}
-.cacheUPDbg {transition:opacity 600ms;position:fixed;left:0;right:0;top:0;bottom:0;max-width:100%;max-height:100%;margin:auto;	width:100%;height:100%;opacity:1;display:none;z-index:900;}
-.cacheUPDtext{position:absolute;left:0;top:318px;width:100%;margin:auto;height:400px;line-height:30px;align-items:left;font-family:sans-serif;font-size:28px;text-align:center;color:white;z-index:901;text-shadow: -2px 2px #274478;}
-#CacheProgress{position:fixed;left:230px;top:0;bottom:30px;max-width:100%;max-height:100%;margin:auto;width:538px;height:8px;background-color:transparent;border:3px solid #8C9CB6;border-right:none;border-radius:3px;}
-#CacheProgress2{position:fixed;left:765px;top:0;bottom:30px;max-width:100%;max-height:100%;margin:auto;width:538px;height:8px;background-color:transparent;border:3px solid #8C9CB6;border-left:none;border-radius:3px;}
-.CacheBar{width:0%;height:100%;background-color:white;}
-.Loader{background-color:transparent;transition:opacity 1000ms;opacity:0;}
+  <head>
+    <title>
+      PS-Phive! (FOR PS4 FW v7.00 to v9.60) v1.0 By Leeful, Ported by Sinajet
+    </title>
+    <style>
+      html {
+        margin: 0px;
+      }
+      body {
+        background-color: #1849a5;
+        background: url("files/img/BG.jpg");
+        background-size: cover;
+        background-repeat: no-repeat;
+        color: #dde5ea;
+        font-family: sans-serif;
+        font-size: 22px;
+        overflow: hidden;
+        cursor: none;
+        margin: 0px;
+      }
+      .cacheUPDbg {
+        transition: opacity 600ms;
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        max-width: 100%;
+        max-height: 100%;
+        margin: auto;
+        width: 100%;
+        height: 100%;
+        opacity: 1;
+        display: none;
+        z-index: 900;
+      }
+      .cacheUPDtext {
+        position: absolute;
+        left: 0;
+        top: 318px;
+        width: 100%;
+        margin: auto;
+        height: 400px;
+        line-height: 30px;
+        align-items: left;
+        font-family: sans-serif;
+        font-size: 28px;
+        text-align: center;
+        color: white;
+        z-index: 901;
+        text-shadow: -2px 2px #274478;
+      }
+      #CacheProgress {
+        position: fixed;
+        left: 230px;
+        top: 0;
+        bottom: 30px;
+        max-width: 100%;
+        max-height: 100%;
+        margin: auto;
+        width: 538px;
+        height: 8px;
+        background-color: transparent;
+        border: 3px solid #8c9cb6;
+        border-right: none;
+        border-radius: 3px;
+      }
+      #CacheProgress2 {
+        position: fixed;
+        left: 765px;
+        top: 0;
+        bottom: 30px;
+        max-width: 100%;
+        max-height: 100%;
+        margin: auto;
+        width: 538px;
+        height: 8px;
+        background-color: transparent;
+        border: 3px solid #8c9cb6;
+        border-left: none;
+        border-radius: 3px;
+      }
+      .CacheBar {
+        width: 0%;
+        height: 100%;
+        background-color: white;
+      }
+      .Loader {
+        background-color: transparent;
+        transition: opacity 1000ms;
+        opacity: 0;
+      }
 
-#console-container {
-    position: fixed; 
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 999; 
-}
-#console {
-    background-color: rgba(0, 0, 0, 0.75); 
-    color: #ebebeb; 
-    font-family: monospace;
-    font-size: 16px;
-    padding: 10px;
-    margin: 10px;
-    height: 150px; 
-    overflow-y: scroll; 
-    border: 1px solid #ebebeb;
-    border-radius: 5px;
-    white-space: pre-wrap; 
-}
+      #console-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 999;
+      }
+      #console {
+        background-color: rgba(0, 0, 0, 0.75);
+        color: #ebebeb;
+        font-family: monospace;
+        font-size: 16px;
+        padding: 10px;
+        margin: 10px;
+        height: 150px;
+        overflow-y: scroll;
+        border: 1px solid #ebebeb;
+        border-radius: 5px;
+        white-space: pre-wrap;
+      }
+    </style>
+    <style>
+      @font-face {
+        font-family: "logging";
+        src: url("fonts/LiberationMono-Regular.ttf");
+      }
+      #console {
+        font-family: "logging";
+      }
+    </style>
+    <script>
+      if (window.applicationCache.status == "0") {
+        window.location.replace("cache.html");
+      }
+    </script>
+  </head>
+  <body>
+    <div id="ScrOverlay" class="cacheUPDbg">
+      <pre id="cacheUPDtxt" class="cacheUPDtext"></pre>
+      <div id="CacheProgress"><div id="CacheBar" class="CacheBar"></div></div>
+      <div id="CacheProgress2"><div id="CacheBar2" class="CacheBar"></div></div>
+      <div id="console-container"><pre id="console"></pre></div>
+    </div>
+    <div id="Loader" class="Loader"></div>
+    <script type="module" src="./psfree/alert.mjs">
 
-</style>
-<script>
-if (localStorage.length == 0) {
- if (localStorage.GHver == null){localStorage.GHver = "v2.4b18.5";}
- if (localStorage.autoGH == null){localStorage.autoGH = "OFF";}
- if (localStorage.passcount == null){localStorage.passcount=0;}
- if (localStorage.failcount == null){localStorage.failcount=0;}
-}
-
-function checkGHBLS(){
- var req = new XMLHttpRequest();
- req.open("GET", "http://127.0.0.1:9090/status");
- req.send();
- req.onload = function(){
-  Loader.innerHTML='<object id="mymenu" type="text/html" data="files/menu.html" style="width:100%; height:100%; background-color:transparent;"></object>';
-  setTimeout(function(){Loader.style.opacity="1";},500);
- }
- req.onerror = function(){setTimeout(runJB,500);}
-}
-
-
-function startConsoleObserver() {
-    const consoleElement = document.getElementById('console');
-    if (!consoleElement) return;
-
-    const observer = new MutationObserver((mutationsList) => {
-        const currentText = consoleElement.textContent || '';
-
-        if (currentText.toLowerCase().includes('awaiting payload...')) {
-            
-            consoleElement.append("Success message detected! Loading menu...\n");
-            
-            setTimeout(JBpass,500);
-            
-            observer.disconnect();
-        }
-    });
-
-    observer.observe(consoleElement, {
-        childList: true,
-        subtree: true,
-        characterData: true
-    });
-}
-// --- END: New and Corrected Console Observer Function ---
-
-function runJB() {
-    ScrOverlay.style.display = "block";
-    CacheProgress.style.display = "none";
-    CacheProgress2.style.display = "none";
-    cacheUPDtxt.innerHTML = "Running PSFree Exploit, Please Wait...";
-
-    // مرحله ۱: ناظر کنسول را فعال می‌کنیم
-    startConsoleObserver();
-
-    // مرحله ۲: اکسپلویت را مثل قبل اجرا می‌کنیم
-    import('./PSFree/alert.mjs').catch(e => {
-        const consoleElement = document.getElementById('console');
-        if (consoleElement) {
-            consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${e.stack || e.message}\n`;
-        }
-    });
-}
-
-function go(){
- if (window.applicationCache.status=='0'){
-  ScrOverlay.style.display="block";Loader.innerHTML='<object type="text/html" data="files/installCache.html" style="width:265px; height:56px;"></object>';
- }
- else {
- checkGHBLS();  
- }
-}
-
-</script>
-</head>
-<body onload="go()">
-<div id=ScrOverlay class=cacheUPDbg><pre id=cacheUPDtxt class=cacheUPDtext></pre><div id=CacheProgress><div id=CacheBar class=CacheBar></div></div><div id=CacheProgress2><div id=CacheBar2 class=CacheBar></div></div><div id="console-container"><pre id="console"></pre></div></div>
-<div id=Loader class=Loader></div>
-<script>
-
-(function() {
-    
-    const console = document.getElementById('console');
-    if (!console) return;
-    const logToScreen = function(message) {
-        console.append(message + '\n');
-        console.scrollTop = console.scrollHeight;
-    };
-    const originalLog = console.log;
-    console.log = function() {
-        let message = Array.from(arguments).join(' ');
-        logToScreen(message);
-        originalLog.apply(console, arguments);
-    };
-    window.alert = function(message) {
-        logToScreen(`[ALERT] ${message}`);
-    };
-})();
-
-function JBpass(){
- ScrOverlay.style.opacity="0";
- setTimeout(function(){ScrOverlay.style.display="none";},600);
- Loader.innerHTML='<object id="mymenu" type="text/html" data="files/menu.html" style="width:100%; height:100%; background-color:transparent;"></object>';
- setTimeout(function(){
-  localStorage.passcount= ++localStorage.passcount;mymenu.contentWindow.passCounter.innerHTML=localStorage.passcount;
-  mymenu.contentWindow.failCounter.innerHTML=localStorage.failcount;
- },1100);
-  setTimeout(function(){Loader.style.opacity="1";},500);
- if(localStorage.autoGH=="ON")
-  setTimeout(function(){mymenu.contentWindow.LoadPL();},1500);
-}
-
-function JBalreadyDone(){
- ScrOverlay.style.opacity="0";
- setTimeout(function(){ScrOverlay.style.display="none";},600);
- Loader.innerHTML='<object id="mymenu" type="text/html" data="files/menu.html" style="width:100%; height:100%; background-color:transparent;"></object>';
- setTimeout(function(){Loader.style.opacity="1";},500);
-}
-</script>
-
-</body>
+    </script>
+  </body>
 </html>
