@@ -96,7 +96,16 @@ async function runJB() {
     cacheUPDtxt.innerHTML = "Running PSFree Exploit, Please Wait...";
 
     startConsoleObserver();
-    const modules = await loadMultipleModules(['../psfree/alert.mjs']);
+
+    try {
+        await loadMultipleModules(['../psfree/alert.mjs']);
+    } catch (e) {
+        const consoleElement = document.getElementById('console');
+        if (consoleElement) {
+            consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${e.stack || e.message}\n`;
+        }
+        console.error("Failed to load/run the exploit module:", e);
+    }
 }
 
 function go(){
