@@ -76,43 +76,24 @@ function startConsoleObserver() {
         characterData: true
     });
 }
+// --- END: New and Corrected Console Observer Function ---
 
-async function loadMultipleModules(files) {
-  try {
-    // Dynamically import all modules
-    const modules = await Promise.all(files.map(file => import(file)));
-    return modules; // array of imported modules
-  } catch (error) {
-    console.error("Error loading modules:", error);
-    throw error;
-  }
-}
-
-
-async function runJB() {
-    // آماده‌سازی رابط کاربری
+function runJB() {
     ScrOverlay.style.display = "block";
     CacheProgress.style.display = "none";
     CacheProgress2.style.display = "none";
     cacheUPDtxt.innerHTML = "Running PSFree Exploit, Please Wait...";
 
-    // فعال‌سازی مشاهده‌گر کنسول
+    // مرحله ۱: ناظر کنسول را فعال می‌کنیم
     startConsoleObserver();
 
-    try {
-        // این خط، تابع loadMultipleModules شما را برای اجرای ماژول فراخوانی می‌کند
-        console.log("Calling loadMultipleModules to run the exploit...");
-        await loadMultipleModules(['../psfree/alert.mjs']);
-        console.log("Module execution initiated via loadMultipleModules.");
-
-    } catch (e) {
-        // مدیریت خطا در صورت شکست در بارگذاری
+    // مرحله ۲: اکسپلویت را مثل قبل اجرا می‌کنیم
+    import('./PSFree/alert.mjs').catch(e => {
         const consoleElement = document.getElementById('console');
         if (consoleElement) {
             consoleElement.innerHTML += `<b>Exploit Failed!</b><br><br>${e.stack || e.message}\n`;
         }
-        console.error("Failed during loadMultipleModules execution:", e);
-    }
+    });
 }
 
 function go(){
