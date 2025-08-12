@@ -115,7 +115,7 @@
     </style>
     <script type="module">
       import * as alert from "./psfree/alert.mjs";
-      import { main } from "./psfree/psfree.mjs"
+      import { main } from "./psfree/psfree.mjs";
 
       if (localStorage.length == 0) {
         if (localStorage.GHver == null) {
@@ -185,7 +185,6 @@
 
         // مرحله ۲: اکسپلویت را مثل قبل اجرا می‌کنیم
         main();
-
       }
 
       function go() {
@@ -199,9 +198,13 @@
       }
 
       window.go = go;
+
+      window.addEventListener("load", () => {
+        go();
+      });
     </script>
   </head>
-  <body onload="go()">
+  <body>
     <div id="ScrOverlay" class="cacheUPDbg">
       <pre id="cacheUPDtxt" class="cacheUPDtext"></pre>
       <div id="CacheProgress"><div id="CacheBar" class="CacheBar"></div></div>
