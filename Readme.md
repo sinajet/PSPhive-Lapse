@@ -32,8 +32,6 @@ To get the host running and test it on your console, follow these simple steps:
     ```bash
     python serv.py
     ```
-4.  **Connect Your PS4:**
-    On your PS4, go to `Settings` \> `Network` \> `Set Up Internet Connection`. Use your computer's IP address as the primary DNS and leave the secondary DNS as `0.0.0.0`. Go to the `User's Guide` in the settings menu to launch the host.
 
 -----
 
