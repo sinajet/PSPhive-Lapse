@@ -65,7 +65,7 @@ font-weight:bolder;z-index:1;text-align:left;
 font-size:24px;color:white;text-shadow:-2px 2px #274478;	
 }
 #PassFail{
-position:fixed;right:10px;bottom:10px;
+position:fixed;right:10px;bottom:25px;
 font-size:18px;font-weight:bold;z-index:1;text-shadow:-1px 1px #646468;text-align:right;
 z-index:901;
 }
@@ -216,4 +216,26 @@ position:fixed;left:0;right:3px;top:0;bottom:0;max-width:100%;max-height:100%;ma
 }
 #navFix3{border:0px solid white;
 position:fixed;left:0;right:0;top:0;bottom:400px;max-width:100%;max-height:100%;margin:auto;overflow:hidden;width:1200px;height:1px;cursor:none;
+}
+
+/* Memory optimization - reduce console size */
+#console-container {
+    position: fixed; 
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999; 
+}
+#console {
+    background-color: rgba(0, 0, 0, 0.75); 
+    color: #ebebeb; 
+    font-family: monospace;
+    font-size: 16px;
+    padding: 10px;
+    margin: 10px;
+    height: 150px; 
+    overflow-y: scroll; 
+    border: 1px solid #ebebeb;
+    border-radius: 5px;
+    white-space: pre-wrap; 
 }
