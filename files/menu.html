@@ -432,22 +432,6 @@ function checkKeyDown(e){
   }
 }
 
-async function loadMultipleModules(files) {
-  try {
-    // Dynamically import all modules
-    const modules = await Promise.all(files.map(file => import(file)));
-    return modules; // array of imported modules
-  } catch (error) {
-    console.error("Error loading modules:", error);
-    throw error;
-  }
-}
-
-const lapse_modules = await loadMultipleModules([
-        'psfree/lapse.mjs',
-      ]);
-payload_modules = lapse_modules[0]
-
 function LoadPL(){
  if(sessionStorage.ghbls == "yes"){
   PLfile=TargetMenu.children[SS.ItemNum-1].getAttribute('PL-Bin');
@@ -458,7 +442,7 @@ function LoadPL(){
    Payload=TargetMenu.children[SS.ItemNum-1].getAttribute('PL-Title'); 
    PLfile=TargetMenu.children[SS.ItemNum-1].getAttribute('PL-Bin');
    if (Payload=='Bin Loader'){
-    payload_modules.runBinLoader();
+    top.g_exploit_api.runBinLoader();
    }
    else {
     LoadedMSG=Payload+" Loaded";
@@ -496,7 +480,7 @@ function LoadFromGHBLS(PLfile){
 
 async function getPL(PLfile) {
     const fullPath = 'bins/' + PLfile;
-    payload_modules.runPayload(fullPath);
+    top.g_exploit_api.runPayload(fullPath);
     PLdone();
 }
 
