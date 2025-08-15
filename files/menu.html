@@ -433,6 +433,7 @@ function checkKeyDown(e){
 }
 
 function LoadPL(){
+setTimeout(() => {
  if(sessionStorage.ghbls == "yes"){
   PLfile=TargetMenu.children[SS.ItemNum-1].getAttribute('PL-Bin');
   LoadFromGHBLS(PLfile);
@@ -450,6 +451,9 @@ function LoadPL(){
    }
   } 
  } 
+
+}, 2000);
+
 }
 
 function LoadFromGHBLS(PLfile){
