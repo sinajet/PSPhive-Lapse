@@ -6,6 +6,7 @@
 UA=navigator.userAgent.substring(navigator.userAgent.indexOf("6.72 (") + 28,navigator.userAgent.indexOf(") Apple"));
 const versionString = UA.slice(-4);
 const fwNum = parseFloat(versionString);
+
 if (!isNaN(fwNum) && fwNum >= 7.00 && fwNum <= 9.60) {
     UA = versionString;
 } else {
@@ -432,7 +433,18 @@ function checkKeyDown(e){
   }
 }
 
-function LoadPL(){
+async function loadMultipleModules(files) {
+  try {
+    // Dynamically import all modules
+    const modules = await Promise.all(files.map(file => import(file)));
+    return modules; // array of imported modules
+  } catch (error) {
+    console.error("Error loading modules:", error);
+    throw error;
+  }
+}
+
+async function LoadPL(){
  if(sessionStorage.ghbls == "yes"){
   PLfile=TargetMenu.children[SS.ItemNum-1].getAttribute('PL-Bin');
   LoadFromGHBLS(PLfile);
@@ -442,11 +454,15 @@ function LoadPL(){
    Payload=TargetMenu.children[SS.ItemNum-1].getAttribute('PL-Title'); 
    PLfile=TargetMenu.children[SS.ItemNum-1].getAttribute('PL-Bin');
    if (Payload=='Bin Loader'){
-    top.g_exploit_api.runBinLoader();
+    const modules = await loadMultipleModules([
+      './psfree/alert.mjs'
+    ]);
+    const payload_Module = modules[0];
+    payload_Module.runBinLoader();
    }
    else {
     LoadedMSG=Payload+" Loaded";
-    getPL(PLfile,SS);
+    getPL(PLfile);
    }
   } 
  } 
@@ -479,8 +495,12 @@ function LoadFromGHBLS(PLfile){
 }
 
 async function getPL(PLfile) {
+    const modules = await loadMultipleModules([
+      './psfree/alert.mjs'
+    ]);
+    const payload_Module = modules[0];
     const fullPath = 'bins/' + PLfile;
-    top.g_exploit_api.runPayload(fullPath);
+    payload_Module.runPayload(fullPath);
     PLdone();
 }
 
